@@ -1,0 +1,23 @@
+<!-- projects/templates/projects/project_index.html -->
+
+{% extends "base.html" %}
+
+{% block page_content %}
+<h1>Sections</h1>
+<div class="row">
+{% for section in schedules%}
+    <div class="col-md-4">
+        <div class="card mb-2">
+            <div class="card-body">
+                <h5 class="card-title">{{ section.title }}</h5>
+                <p class="card-text">{{ section.course.course_code }}</p>
+                <a href="{% url 'schedule_detail' section.pk %}"
+                   class="btn btn-primary">
+                    Read More
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

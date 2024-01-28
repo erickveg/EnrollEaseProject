@@ -1,0 +1,16 @@
+<!-- schedules/templates/schedules/schedule_detail.html -->
+
+{% extends "base.html" %}
+
+{% block page_content %}
+<h1>{{ schedule.title }}</h1>
+<div class="row">
+    <div class="col-md-4">
+        <h5>About the project:</h5>
+        <p>{{ schedule.description }}</p>
+        <br>
+        <h5>Technology used:</h5>
+        <p>{{ schedule.technology }}</p>
+    </div>
+</div>
+{% endblock page_content %}

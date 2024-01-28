@@ -1,0 +1,17 @@
+<!-- schedules/templates/schedules/optimal_schedule.html -->
+
+{% extends "base.html" %}
+
+{% block page_content %}
+  <h2>Optimal Schedule</h2>
+
+  <ul>
+    {% for course in course_list %}
+      <li>
+        <strong>Course Title:</strong> {{ course.title }}<br>
+        <strong>Section N:</strong> {{ course.course_section }}<br>
+        <!-- Add more fields based on your algorithm -->
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock page_content %}

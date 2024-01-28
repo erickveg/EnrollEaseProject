@@ -1,0 +1,33 @@
+Name: Erick Vega
+Project Title: EnrollEase (Smart Class Registration)
+
+Team Members:
+
+Overall Status: Behind
+
+Number of hours worked since last update: 5
+Number of hours worked on the project thus far: 5
+Total number of hours anticipated for completion: 126
+
+Accomplishments:
+- Defined the main features of my web application
+- Researched a Techn Stack suitable for the scope of the project able to use Python for the back-end. I learned that Django can help me develop a full-stack web app with the help of Bootstrap for the front-end.
+- Researched different platforms for web app deployment and how to use containers.
+- Modeled the data structure to store University courses
+- Started a mockup in Figma for the front-end of the application
+
+Challenges:
+- Lack of understanding on how to deploy the app once is ready and how databases are stored and connected to the app.
+- First time developing a full-stack application. Online blogs, YouTube, and documentation papers have helped me understand the overall technologies used in web app development.
+
+Plans / Goals for next week:
+- Set up your Django project and create the initial database models.
+- Plan the structure of the application and define its parts.
+- Prepare a list of requirements (must and should haves)
+
+Accountability plan: (What is your plan to keep yourself honest and follow through with the goals that you have outlined?)
+I have set apart 2 hours of my day to work on this project to keep my commitment of 9 working hours every week. 
+
+
+Other comments:
+Question: I don't quite understand the copyright policies of our senior project. Can we keep developing our project after graduation and even sell it to different customers?
