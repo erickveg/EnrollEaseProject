@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="section",
-            name="custom_id",
+            name="section_name_id",
             field=models.CharField(
                 default=None, editable=False, max_length=255, unique=True
             ),

@@ -34,48 +34,112 @@ def create_and_save_objects(courses_data):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+class SimpleSection:
+    def __init__(self, section_name, time, days):
+        self.section_name = section_name
+        self.time = time
+        self.days = [d for d in days if d.isalpha()]
+
+    def __str__(self):
+        days_str = "".join(self.days)
+        return f"{self.section_name} {self.time} {days_str}"
+    
+    def __repr__(self):
+        days_str = "".join(self.days)
+        return f"{self.section_name} {self.time} {days_str}"
+
 def generate_course_list(): # The parameter should be a list of desired classes
 
-    desired_classes = ["ED 444", "CHILD 210", "CSE 382", "BUS 100"] # inpur has to have a space between the course code and the course number
+    desired_classes = ["ED 444", "CHILD 210", "CSE 382", "BUS 100"] # input has to have a space between the course code and the course number
     # Fetch data from the database
     sections = Section.objects.all()
 
-    # Separate sections by day and time
-    days_times_sections = {}
+    simple_sections = []
+
     for section in sections:
         if section.course.course_code in desired_classes:
+            section_name = section.section_name_id
             schedules = section.schedule.split(",")
             for schedule in schedules:
-                print(schedule)
+                days = ""
+                times = ""
+
                 if schedule != "00:00-00:00AM":
                     days = schedule.split(" ")[0] 
                     times = schedule.split(" ")[1]
                     times = _get_standard_time(times)
+                else:
+                    days = "X"
+                    times = "00:00-00:00"
 
-                    for day in days:
-                        if day in days_times_sections:
-                            if times in days_times_sections[day]:
-                                days_times_sections[day][times].append(section.custom_id)
-                            else:
-                                days_times_sections[day][times] = [section.custom_id]
-                        else:
-                            days_times_sections[day] = {times : [section.custom_id]}
+                simple_section = SimpleSection(section_name, times, days)
+                simple_sections.append(simple_section)
 
-    # Calculate optimal schedules (return a a list of sections, that should be enough to get section details)
+    sections_combinations = generate_sections_combinations(simple_sections)
     
+    viable_combinations = select_viable_combinations(sections_combinations, desired_classes)
+    print(viable_combinations)
 
-    ## OPTIMAL SCHEDULES
-                            
-    # FIRST OPTION                              # SECOND OPTION (Winner if earliest classes are prioritized)
+
+    # Find the combination with the same length as the desired_classes
+
+
+def same_code_in_combination(section, combination):
+    for s in combination:
+        if section.section_name.split("_")[0] in s.section_name.split("_")[0]:
+            return True
+    return False
+
+def same_time_in_combination(section, combination):
+    for s in combination:
+        if section.time == s.time:
+            return True
+    return False
+
+def same_days_in_combination(section, combination):
+    for s in combination:
+        return any(item in s.days for item in section.days)
+
+
+def generate_sections_combinations(sections):
     
-    # M: 10:15-11:15AM   : ED444_02             # M: 10:15-11:15AM   : BUS100_01
-    # M: 11:30AM-12:30PM : CHILD210_08          # M: 11:30AM-12:30PM : CHILD210_08
-    # M: 12:45AM-01:45PM : CSE382_01            # M: 12:45AM-01:45PM : CSE382_01
-                            
-    # T: 12:45AM-01:45PM  : BUS100_02           # T: 10:15-11:15AM  : ED444_01
+    master_combinations = []
+    combinations = []
 
-    return days_times_sections
+    for i in range(len(sections)):
+        primary_course = sections[i]
+        combinations.append([primary_course])
 
+        for k in range(len(sections[i+1:])): # iterate through the rest of the lists
+            secondary_course = sections[i+1+k]
+            
+            combinations_length = len(combinations)
+            for c in range(combinations_length):
+                combination = combinations[c]
+
+                # if the secondary_course code is not in the list of combinations AND
+                # if the seconday_course is not in the same list sub-list
+                if not same_code_in_combination(secondary_course, combination) and\
+                (not same_time_in_combination(secondary_course, combination) or\
+                    (same_time_in_combination(secondary_course, combination) and not same_days_in_combination(secondary_course, combination))):   
+                    temp_comb = combination[:]
+                    temp_comb.append(secondary_course)
+                    combinations.append(temp_comb)
+
+        master_combinations.append(combinations)
+        combinations = []
+        
+    return master_combinations
+
+def select_viable_combinations(master_combinations, desired_classes):
+    viable_combinations = []
+
+    for m in master_combinations:
+        for combination in m:
+            if len(combination) == len(desired_classes):
+                viable_combinations.append(combination)
+
+    return viable_combinations
 
 def _get_standard_time(time_str : str):
     times = time_str.split("-")

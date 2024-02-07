@@ -21,16 +21,16 @@ class Section(models.Model):
     room = models.CharField(max_length=255)
     class_type = models.CharField(max_length=255)
     delivery_method = models.CharField(max_length=255)
-    custom_id = models.CharField(max_length=255, unique=True, editable=False)  # Add this field
+    section_name_id = models.CharField(max_length=255, unique=True, editable=False)  # Add this field
 
     def save(self, *args, **kwargs):
         # Combine course_code and course_section to create the custom_id
-        self.custom_id = f"{self.course.course_code}_{self.course_section}"
+        self.section_name_id = f"{self.course.course_code}_{self.course_section}"
 
         # Remove spaces from the custom_id
-        self.custom_id = self.custom_id.replace(" ", "")
+        self.section_name_id = self.section_name_id.replace(" ", "")
 
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.custom_id
+        return self.section_name_id
