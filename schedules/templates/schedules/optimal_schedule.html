@@ -1,17 +1,159 @@
 <!-- schedules/templates/schedules/optimal_schedule.html -->
 
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load bootstrap5 static %}
+
+{% block title %}Calendar{% endblock %}
+
+{% block head %}
+  <!-- Load the Bootstrap library from CDN -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+  <!-- Load the Bootstrap Calendar plugin files from CDN -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-calendar/0.2.5/js/calendar.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-calendar/0.2.5/css/calendar.css">
+
+  <!-- Load the static template library -->
+  {% load static %}
+  
+  <!-- Serialize course_list as JSON and embed it in the template -->
+  <script>
+    var courseList = {{ course_list|safe }};
+  </script>
+  {% endblock %}
 
 {% block page_content %}
-  <h2>Optimal Schedule</h2>
+  <div class="container col-lg-4">
+    <br>
+    <center><h1>We found {{course_list|length}} schedules for you!</h1></center>
+    <div class="card">
+      <h3 class="card-header" id="monthAndYear"></h3>
+      <table class="table table-bordered table-responsive-sm" id="calendar">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Mon</th>
+            <th>Tue</th>
+            <th>Wed</th>
+            <th>Thu</th>
+            <th>Fri</th>
+          </tr>
+        </thead>
+        <tbody id="calendarBody">
+        </tbody>
+      </table>
+      <div class="form-inline">
+        <button class="btn btn-outline-success col-sm-3" id="previous" onclick="previous()">Previous</button>
+        <button class="btn btn-outline-success col-sm-3" id="next" onclick="next()">Next</button>
+      </div>
+      <br/>
+      <form class="form-inline">
+        <label class="lead mr-2 ml-2" for="month">Jump To: </label>
+        <select class="form-control col-sm-4" name="month" id="month" onchange="jump()">
+        </select>
+        <label for="year"></label>
+        <select class="form-control col-sm-4" name="year" id="year" onchange="jump()">
+        </select>
+      </form>
+    </div>
+  </div>
+  <script>
+    // Current index to keep track of which course_list to display
+    let currentIndex = 0;
 
-  <ul>
-    {% for course in course_list %}
-      <li>
-        <strong>Course Title:</strong> {{ course.title }}<br>
-        <strong>Section N:</strong> {{ course.course_section }}<br>
-        <!-- Add more fields based on your algorithm -->
-      </li>
-    {% endfor %}
-  </ul>
-{% endblock page_content %}
+    function updateCalendar() {
+      // Existing calendar generation logic
+
+      // Add rows for each 15-minute interval
+      let start = 8; // 8:00 am
+      let end = 17; // 5:00 pm
+
+      // Iterate over course_list and use JavaScript to insert data into the table cells
+      for (let i = start * 4; i < end * 4; i++) {
+        let newRow = calendarBody.insertRow();
+
+        // Add the time column
+        let timeCell = newRow.insertCell(0);
+        timeCell.innerHTML = formatTime(i);
+
+        // Add the remaining columns
+        for (let j = 1; j < 6; j++) {
+          let cell = newRow.insertCell(j);
+
+          // Iterate over each section in the course_list
+          for (let k = 0; k < courseList[currentIndex].length; k++) {
+            let section = courseList[currentIndex][k];
+
+            // Check if the current cell corresponds to the section's day and time range
+            if (section.days.includes(getDayByIndex(j)) && isTimeInRange(formatTime(i), section.time)) {
+              // Append the section_name to the cell
+              cell.innerHTML += section.section_name + "<br>";
+            }
+          }
+        }
+      }
+    }
+
+    
+    // Function to handle the "Next" button click
+    function next() {
+      // Clear the current calendar
+      clearCalendar();
+
+      // Increment the currentIndex
+      currentIndex = (currentIndex + 1) % courseList.length;
+
+      // Update the calendar with the new course_list
+      updateCalendar();
+    }
+
+    // Function to clear the current calendar
+    function clearCalendar() {
+      // Clear the content of the calendar body
+      calendarBody.innerHTML = '';
+    }
+
+    // Helper function to get the day name based on the column index
+    function getDayByIndex(index) {
+      const daysOfWeek = ['M', 'T', 'W', 'R', 'F'];
+      return daysOfWeek[index - 1];
+    }
+
+    // Helper function to check if a given time is within a time range
+    function isTimeInRange(time, timeRange) {
+      // Extract start and end times from the range (assuming the format HHmm-HHmm)
+      const [start, end] = timeRange.split('-');
+
+      // Convert the time strings to numerical values for comparison
+      const numericTime = parseInt(time.replace(':', ''), 10);
+      const numericStart = parseInt(start.replace(':', ''), 10);
+      const numericEnd = parseInt(end.replace(':', ''), 10);
+
+      // Check if the time is within the range
+      return numericTime >= numericStart && numericTime < numericEnd;
+    }
+
+    // Format time based on the 15-minute interval
+    function formatTime(interval) {
+      let hours = Math.floor(interval / 4);
+      let minutes = (interval % 4) * 15;
+      let ampm = hours >= 12 ? 'pm' : 'am';
+
+      // Convert hours to 12-hour format
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      // Add leading zero to minutes if necessary
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+
+      return hours + ':' + minutes + ampm;
+    }
+
+
+    window.onload = updateCalendar();
+  </script>
+{% endblock %}
+

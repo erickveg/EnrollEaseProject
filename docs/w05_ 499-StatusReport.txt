@@ -1,0 +1,32 @@
+Name: Erick Vega
+Project Title: EnrollEase (Smart Class Registration)
+
+Team Members:
+
+Overall Status: On-schedule
+
+Number of hours worked since last update: 8
+Number of hours worked on the project thus far: 29
+Total number of hours anticipated for completion: 100
+
+Accomplishments:
+- Got the class combinations algorithm working, 4 classes generated 174 different possible combinations.
+- Started looking into presenting the top 5 results into my webpage as a schedule grid.
+
+
+Challenges:
+- There is not too much information online on how to create a schedule with bootstrap, and the syntax is new for me.
+- There are lots of folders and files in the project so it's hard to navigate or know where to put my code.
+
+
+Plans / Goals for next week:
+- Return a list of courses to the front-end and present them in a nice table.
+- Allow user to input courses from the web site.
+
+
+Accountability plan: (What is your plan to keep yourself honest and follow through with the goals that you have outlined?)
+- I will spend at least 1 hour every morning to work on this project. 
+
+
+Other comments:
+

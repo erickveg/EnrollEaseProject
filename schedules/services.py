@@ -75,13 +75,23 @@ def generate_course_list(): # The parameter should be a list of desired classes
                 simple_section = SimpleSection(section_name, times, days)
                 simple_sections.append(simple_section)
 
-    sections_combinations = generate_sections_combinations(simple_sections)
-    
+    sections_combinations = generate_sections_combinations(simple_sections)    
     viable_combinations = select_viable_combinations(sections_combinations, desired_classes)
-    print(viable_combinations)
+
+    course_list_dicts = [
+    [
+        {'section_name': section.section_name, 'time': section.time, 'days': section.days}
+        for section in inner_list
+    ]
+    for inner_list in viable_combinations[:5]
+    ]
+
+    return course_list_dicts
 
 
     # Find the combination with the same length as the desired_classes
+    # TODO:
+    # Fix this cases [BUS100_A5 00:00-00:00 X, CSE382_01 1245-1345 MWF, ED444_01 1015-1115 TR, CHILD210_05 0945-1115 TR] ED444 and CHILD210 are crashing.
 
 
 def same_code_in_combination(section, combination):

@@ -20,9 +20,9 @@ def schedule_detail(request, pk):
     return render(request, "schedules/schedule_detail.html", context)
 
 def generate_course_view(request):
-    course_list = generate_course_list()
+    simple_sections = generate_course_list()
 
     # Do something with the course_list (e.g., pass it to a template or store it in the database)
     # ...
 
-    return render(request, 'schedules/optimal_schedule.html', {'course_list': course_list})
+    return render(request, 'schedules/optimal_schedule.html', {'course_list': simple_sections})
