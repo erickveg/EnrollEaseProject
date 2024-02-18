@@ -26,3 +26,4 @@ def generate_course_view(request):
     # ...
 
     return render(request, 'schedules/optimal_schedule.html', {'course_list': simple_sections})
+
