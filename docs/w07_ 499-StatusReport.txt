@@ -1,0 +1,33 @@
+Name: Erick Vega
+Project Title: EnrollEase (Smart Class Registration)
+
+Team Members:
+
+Overall Status: Behind
+
+Number of hours worked since last update:7
+Number of hours worked on the project thus far: 40
+Total number of hours anticipated for completion: 90
+
+Accomplishments:
+- Data from services is being consumed correctly by the interface.
+- Polish the main view of the web interface, added icons, new background colors, and implemented previous, next buttons for easy navigation across optimal schedules.
+- Added a profile section in the web interface.
+- Discovered algorithm issues on class selection.
+
+
+Challenges:
+- Differentiation of components is getting complicated because there is a single codebase for all the elements of the applicaiton, small refactoring might be required.
+
+
+
+Plans / Goals for next week:
+- Have Selenium, the web scrapper, grabbing classes from the University's website.
+
+
+Accountability plan: (What is your plan to keep yourself honest and follow through with the goals that you have outlined?)
+- I will spend at least 2 hours every morning to work on this project. 
+
+
+Other comments:
+
