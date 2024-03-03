@@ -1,0 +1,30 @@
+Name: Erick Vega
+Project Title: EnrollEase (Smart Class Registration)
+
+Team Members:
+
+Overall Status: On schedule
+
+Number of hours worked since last update:7
+Number of hours worked on the project thus far: 47
+Total number of hours anticipated for completion: 83
+
+Accomplishments:
+- Divided my web interface in three main component, class selector, schedule generator, and information section.
+- Deployed my application with Koyeb, see: https://enrollease-erickveg.koyeb.app/schedules/optimal_schedule
+- Polished weekly calendar style
+
+Challenges:
+- Django requires applications for different components but integration is confusing.
+
+
+Plans / Goals for next week:
+- Have Selenium, the web scrapper, grabbing classes from the University's website.
+
+
+Accountability plan: (What is your plan to keep yourself honest and follow through with the goals that you have outlined?)
+- I will spend at least 2 hours every morning to work on this project. 
+
+
+Other comments:
+
