@@ -1,4 +1,6 @@
 from .models import Section, Course, School
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 
 def create_and_save_objects(courses_data):
     try:
@@ -92,6 +94,7 @@ def generate_course_list(): # The parameter should be a list of desired classes
     # Find the combination with the same length as the desired_classes
     # TODO:
     # Fix this cases [BUS100_A5 00:00-00:00 X, CSE382_01 1245-1345 MWF, ED444_01 1015-1115 TR, CHILD210_05 0945-1115 TR] ED444 and CHILD210 are crashing.
+    # To fix it we might need to store times individually, and then modify the same_time_in_combination function.
 
 
 def same_code_in_combination(section, combination):
@@ -190,7 +193,27 @@ def _get_standard_time(time_str : str):
 
     return standard_time
 
+def grab_classes_with_selenium():
 
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+
+    driver = webdriver.Chrome()
+    driver.get("https://secure.byui.edu/cas/login?service=https%3A%2F%2Fsecure.byui.edu%2Fcas%2Fidp%2Fprofile%2FSAML2%2FCallback%3FentityId%3Dstudent.byui.edu")
+    # driver.get("https://student.byui.edu/ICS/Academics/Academic_Information.jnz?portlet=Registration&screen=Add+Drop+Courses+BYUI&screenType=next")
+
+    # Find the input element by its name
+    input_element = driver.find_element(By.NAME, "pg0$V$tabSearch$txtTitleRestrictor")
+
+    # Clear the existing value (if any)
+    input_element.clear()
+
+    # Set the new value
+    new_value = "Your desired value"
+    input_element.send_keys(new_value)
+
+    # Press Enter to trigger the search (optional)
+    input_element.send_keys(Keys.RETURN)
 
                             
                 

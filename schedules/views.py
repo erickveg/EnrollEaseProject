@@ -2,7 +2,7 @@
 
 from django.shortcuts import render
 from schedules.models import Section
-from .services import generate_course_list
+from .services import generate_course_list, grab_classes_with_selenium
 
 
 def schedule_index(request):
@@ -20,10 +20,9 @@ def schedule_detail(request, pk):
     return render(request, "schedules/schedule_detail.html", context)
 
 def generate_course_view(request):
+    # grab_classes_with_selenium()
     simple_sections = generate_course_list()
 
-    # Do something with the course_list (e.g., pass it to a template or store it in the database)
-    # ...
-
-    return render(request, 'schedules/optimal_schedule.html', {'course_list': simple_sections})
+    if len(simple_sections) > 0:
+        return render(request, 'schedules/optimal_schedule.html', {'course_list': simple_sections})
 
