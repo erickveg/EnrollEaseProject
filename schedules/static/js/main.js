@@ -5,7 +5,7 @@
 
 	$(".js-select2").select2({
 			closeOnSelect : false,
-			placeholder : "Click to select an option",
+			placeholder : "Click to select a class",
 			allowHtml: true,
 			allowClear: true,
 			tags: true // создает новые опции на лету
@@ -16,7 +16,7 @@
 		templateSelection: iformat,
 		templateResult: iformat,
 		allowHtml: true,
-		placeholder: "Click to select an option",
+		placeholder: "Click to select an class",
 		dropdownParent: $( '.select-icon' ),//обавили класс
 		allowClear: true,
 		multiple: false
