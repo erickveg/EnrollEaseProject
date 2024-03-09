@@ -371,7 +371,7 @@
         
         style="position: absolute; cursor: pointer; border: 0px; cursor: hand; font-family: Tahoma; font-size: 8pt; white-space: no-wrap; left: 2%; top: ${top}px; width: 95%; height: 60px;">
 
-        <div class="card-body Gradient" title="${course.section_name} ${course.time}"
+        <div class="card-body Gradient" title="${course.title} ${course.start_time} - ${course.end_time}"
           style="height: 58px; border: 1px solid gray; overflow: hidden; background-color: rgb(238, 238, 238); border-radius: 10px; ">
 
           <div style="float: left; height: 100%; border-left: 2px solid #A9C638;"></div>
@@ -379,8 +379,8 @@
 
           <div style="margin-top: -15px;"">
             
-            <div class="scheduleItemTitle">${course.section_name} Class Title</div>
-            <div>${course.time}</div>
+            <div class="scheduleItemTitle">${course.section_name}</div>
+            <div>${course.start_time} - ${course.end_time} </div>
           </div>
 
         </div>
@@ -448,9 +448,9 @@
         for (var j = 0; j < course_pack.length; j++) {   
 
           var single_course = course_pack[j];
-          var time = single_course.time.split("-");
-          var start = time[0];
-          var end = time[1];
+          // var time = single_course.time.split("-");
+          var start = single_course.start_time;
+          var end = single_course.end_time;
           console.log(start);          
 
           if (single_course.days.includes("M")) {

@@ -37,9 +37,11 @@ def create_and_save_objects(courses_data):
         print(f"An error occurred: {e}")
 
 class SimpleSection:
-    def __init__(self, section_name, time, days):
+    def __init__(self, section_name, title, start_time, end_time, days):
         self.section_name = section_name
-        self.time = time
+        self.title = title
+        self.start_time = start_time
+        self.end_time = end_time
         self.days = [d for d in days if d.isalpha()]
 
     def __str__(self):
@@ -61,20 +63,25 @@ def generate_course_list(): # The parameter should be a list of desired classes
     for section in sections:
         if section.course.course_code in desired_classes:
             section_name = section.section_name_id
+            title = section.title
             schedules = section.schedule.split(",")
             for schedule in schedules:
                 days = ""
-                times = ""
+                start_time = ""
+                end_time = ""
 
                 if schedule != "00:00-00:00AM":
                     days = schedule.split(" ")[0] 
                     times = schedule.split(" ")[1]
                     times = _get_standard_time(times)
+                    start_time = times[0]
+                    end_time = times[1]
                 else:
                     days = "X"
-                    times = "00:00-00:00"
+                    start_time = "00:00"
+                    end_time = "00:00"
 
-                simple_section = SimpleSection(section_name, times, days)
+                simple_section = SimpleSection(section_name, title, start_time, end_time, days)
                 simple_sections.append(simple_section)
 
     sections_combinations = generate_sections_combinations(simple_sections)    
@@ -82,7 +89,11 @@ def generate_course_list(): # The parameter should be a list of desired classes
 
     course_list_dicts = [
     [
-        {'section_name': section.section_name, 'time': section.time, 'days': section.days}
+        {'section_name': section.section_name, 
+         'title' : section.title,
+         'start_time': section.start_time,
+         'end_time' : section.end_time,
+         'days': section.days}
         for section in inner_list
     ]
     for inner_list in viable_combinations[:5]
@@ -105,13 +116,19 @@ def same_code_in_combination(section, combination):
 
 def same_time_in_combination(section, combination):
     for s in combination:
-        if section.time == s.time:
+        # if section.section_name == "CHILD210_05" and s.section_name == "ED444_01":
+        #     print("hello")
+        if (s.start_time <= section.start_time <= s.end_time) or (s.start_time <= section.end_time <= s.end_time):
             return True
     return False
 
 def same_days_in_combination(section, combination):
     for s in combination:
-        return any(item in s.days for item in section.days)
+        # if section.section_name == "CHILD210_05" and s.section_name == "ED444_01":
+        #     print("hello")
+        if any(item in s.days for item in section.days):
+            return True
+    return False
 
 
 def generate_sections_combinations(sections):
@@ -132,9 +149,20 @@ def generate_sections_combinations(sections):
 
                 # if the secondary_course code is not in the list of combinations AND
                 # if the seconday_course is not in the same list sub-list
-                if not same_code_in_combination(secondary_course, combination) and\
-                (not same_time_in_combination(secondary_course, combination) or\
-                    (same_time_in_combination(secondary_course, combination) and not same_days_in_combination(secondary_course, combination))):   
+
+                # if secondary_course.section_name == "CHILD210_05" and combination[-1].section_name == "ED444_01":
+                #     print("hello")
+
+                # smd = same_days_in_combination(secondary_course, combination)
+                # stc = same_time_in_combination(secondary_course, combination)
+                # scic = same_code_in_combination(secondary_course, combination)
+
+                if (not same_code_in_combination(secondary_course, combination)) and\
+                (not same_days_in_combination(secondary_course, combination) and (same_time_in_combination(secondary_course, combination)) or\
+                 not same_time_in_combination(secondary_course, combination)):   
+                    if secondary_course.section_name == "CHILD210_05" and combination[-1].section_name == "ED444_01":
+                        print("hello")
+
                     temp_comb = combination[:]
                     temp_comb.append(secondary_course)
                     combinations.append(temp_comb)
@@ -158,7 +186,7 @@ def _get_standard_time(time_str : str):
     times = time_str.split("-")
     
     first_time = True
-    standard_time = ""
+    standard_time = []
 
 
     for time in times:
@@ -184,12 +212,13 @@ def _get_standard_time(time_str : str):
         else:
             time = time.replace(":", "")
 
+        standard_time.append(time)
 
-        if first_time:
-            standard_time += f"{time}-"
-            first_time = False
-        else:
-            standard_time += time
+        # if first_time:
+        #     standard_time += f"{time}-"
+        #     first_time = False
+        # else:
+        #     standard_time += time
 
     return standard_time
 
