@@ -1,5 +1,10 @@
-<div class="container col-lg-8 mb-4">
-  <center><h2>We found {{course_list|length}} schedules for you!</h2></center>
+
+ <!-- Serialize course_list as JSON and embed it in the template
+ <script>
+    
+</script>   -->
+
+<div id="pageTitle" class="container col-lg-8 mb-4">
 </div>
 
   <div class="form-inline justify-content-end mb-2">
@@ -315,8 +320,15 @@
   </tbody></table></div>
 
   <script>
+    
+    var courseList = {{ schedules|safe }};  
 
     let currentIndex = 0;
+
+    function addTitle() {
+      var title = document.getElementById("pageTitle");
+      title.innerHTML = `<center><h2>We found ${courseList.length} schedules for you!</h2></center>`;
+    }
 
     function next() {
       // Clear the calendar
@@ -334,7 +346,7 @@
       clearCalendar();
 
       // Increment the currentIndex
-      currentIndex = (currentIndex - 1) % courseList.length;
+      currentIndex = (currentIndex - 1 + courseList.length) % courseList.length;
 
       // Update the calendar with the new course_list
       addCoursesToTable();
@@ -357,39 +369,47 @@
     }
     
 
-    // Function to create a table cell for a course
-      function createTableData(course, top) {
+// Define your color palette mapping
+const colorPalette = [
+  "122c34",
+  "224870",
+  "2a4494",
+  "4ea5d9",
+  "44cfcb",
+  ];
 
-        var divElement = document.createElement("div");
-        divElement.style.position = "relative";
-        divElement.style.display = "block";
+function createTableData(course, top, index) {
+  // Get the color from the palette based on the index
+  const sectionColor = colorPalette[index % colorPalette.length];
 
-        divElement.innerHTML = `
-        <div class="card"
-        onselectstart="return false;"
-        onclick="resetSiblingZIndex(this); this.style.zIndex=1; event.cancelBubble=true;"
-        
-        style="position: absolute; cursor: pointer; border: 0px; cursor: hand; font-family: Tahoma; font-size: 8pt; white-space: no-wrap; left: 2%; top: ${top}px; width: 95%; height: 60px;">
+  var divElement = document.createElement("div");
+  divElement.style.position = "relative";
+  divElement.style.display = "block";
 
-        <div class="card-body Gradient" title="${course.title} ${course.start_time} - ${course.end_time}"
-          style="height: 58px; border: 1px solid gray; overflow: hidden; background-color: rgb(238, 238, 238); border-radius: 10px; ">
+  divElement.innerHTML = `
+    <div class="card"
+      onselectstart="return false;"
+      onclick="resetSiblingZIndex(this); this.style.zIndex=1; event.cancelBubble=true;"
+      style="position: absolute; cursor: pointer; border: 0px; cursor: hand; font-family: Tahoma; font-size: 8pt; white-space: no-wrap; left: 2%; top: ${top}px; width: 95%; height: 60px;">
 
-          <div style="float: left; height: 100%; border-left: 2px solid #A9C638;"></div>
-          <div style="float: left; width: 5px; height: 100%;"></div>
+      <div class="card-body Gradient" title="${course.title} ${course.start_time} - ${course.end_time}"
+        style="height: 58px; overflow: hidden; background-color: #${sectionColor}; border-radius: 10px; ">
 
-          <div style="margin-top: -15px;"">
-            
-            <div class="scheduleItemTitle">${course.section_name}</div>
-            <div>${course.start_time} - ${course.end_time} </div>
-          </div>
+        <div style="float: left; height: 100%; border-left: 2px solid #A9C638;"></div>
+        <div style="float: left; width: 5px; height: 100%;"></div>
 
+        <div style="margin-top: -15px;"">
+          <div class="scheduleItemTitle" style="color: white;">${course.section_name}</div>
+          <div style="color: white;">${course.start_time} - ${course.end_time} </div>
         </div>
 
       </div>
-        `;
+    </div>
+  `;
 
-        return divElement;
-      }
+  return divElement;
+}
+      
 
       // Function to add courses to the table
       function addCoursesToTable() {
@@ -454,164 +474,29 @@
           console.log(start);          
 
           if (single_course.days.includes("M")) {
-            monday.appendChild(createTableData(single_course, topFromTime[start]));
+            monday.appendChild(createTableData(single_course, topFromTime[start], j));
           }
           if (single_course.days.includes("T")) {
-              tuesday.appendChild(createTableData(single_course, topFromTime[start]));
+              tuesday.appendChild(createTableData(single_course, topFromTime[start], j));
           }
           if (single_course.days.includes("W")) {
-              wednesday.appendChild(createTableData(single_course, topFromTime[start]));
+              wednesday.appendChild(createTableData(single_course, topFromTime[start], j));
           }
           if (single_course.days.includes("R")) {
-              thursday.appendChild(createTableData(single_course, topFromTime[start]));
+              thursday.appendChild(createTableData(single_course, topFromTime[start], j));
           }
           if (single_course.days.includes("F")) {
-              friday.appendChild(createTableData(single_course, topFromTime[start]));
+              friday.appendChild(createTableData(single_course, topFromTime[start], j));
           }
 
         }        
            
         }
-      // }
 
-    addCoursesToTable(courseList);
-
-          // Simulate an asynchronous fetch of course data
-    // function fetchCourseList(callback) {
-    //   // Replace this with your actual asynchronous data fetching logic
-    //   setTimeout(function () {
-    //     var mockData = 
-    //     callback(mockData);
-    //   }, 2000); // Simulating a delay of 2000 milliseconds (2 seconds)
-    // }
-
-    // // Call the function to fetch the course list and add it to the table
-    // fetchCourseList(function (courseList) {
-      
-    // });
+    console.log(courseList);
+    addTitle();
+    
+    addCoursesToTable(courseList); 
   </script>
     
-  <!-- <script>
-    // Current index to keep track of which course_list to display
-    let currentIndex = 0;
-
-    // Add this code to set the overlay styles based on the time range
-    function setOverlayStyles() {
-      const overlayContainer = document.querySelector('.overlay-container');
-
-      // Iterate over course_list and set the overlay styles
-      courseList.forEach((sectionList) => {
-        sectionList.forEach((section) => {
-          const overlay = document.createElement('div');
-          overlay.classList.add('event-overlay');
-                
-          // Calculate left position based on the day
-          overlay.style.left = 10;
-
-          // Calculate top position based on the start time
-          overlay.style.top = 10;
-
-          // Calculate height based on the time range
-          overlay.style.height = 10;
-
-          overlayContainer.appendChild(overlay);
-        });
-      });
-    }
-
-    // Call setOverlayStyles after updating the calendar
-    function updateCalendar() {
-      // Existing calendar generation logic
-
-      // Add rows for each 15-minute interval
-      let start = 8; // 8:00 am
-      let end = 17; // 5:00 pm
-
-      // Iterate over course_list and use JavaScript to insert data into the table cells
-      for (let i = start * 4; i < end * 4; i++) {
-        let newRow = calendarBody.insertRow();
-
-        // Add the time column
-        let timeCell = newRow.insertCell(0);
-        timeCell.innerHTML = formatTime(i);
-
-        // Add the remaining columns
-        for (let j = 1; j < 6; j++) {
-          let cell = newRow.insertCell(j);
-
-          // Iterate over each section in the course_list
-          for (let k = 0; k < courseList[currentIndex].length; k++) {
-            let section = courseList[currentIndex][k];
-
-            // Check if the current cell corresponds to the section's day and time range
-            if (section.days.includes(getDayByIndex(j)) && isTimeInRange(formatTime(i), section.time)) {
-              // Append the section_name to the cell
-              cell.innerHTML += section.section_name + "<br>";
-            }
-          }
-        }
-      }
-
-      // Call setOverlayStyles to set overlay styles after updating the calendar
-      setOverlayStyles();
-    }
-
-
-    
-    // Function to handle the "Next" button click
-    function next() {
-      // Clear the current calendar
-      clearCalendar();
-
-      // Increment the currentIndex
-      currentIndex = (currentIndex + 1) % courseList.length;
-
-      // Update the calendar with the new course_list
-      updateCalendar();
-    }
-
-    // Function to clear the current calendar
-    function clearCalendar() {
-      // Clear the content of the calendar body
-      calendarBody.innerHTML = '';
-    }
-
-    // Helper function to get the day name based on the column index
-    function getDayByIndex(index) {
-      const daysOfWeek = ['M', 'T', 'W', 'R', 'F'];
-      return daysOfWeek[index - 1];
-    }
-
-    // Helper function to check if a given time is within a time range
-    function isTimeInRange(time, timeRange) {
-      // Extract start and end times from the range (assuming the format HHmm-HHmm)
-      const [start, end] = timeRange.split('-');
-
-      // Convert the time strings to numerical values for comparison
-      const numericTime = parseInt(time.replace(':', ''), 10);
-      const numericStart = parseInt(start.replace(':', ''), 10);
-      const numericEnd = parseInt(end.replace(':', ''), 10);
-
-      // Check if the time is within the range
-      return numericTime >= numericStart && numericTime < numericEnd;
-    }
-
-    // Format time based on the 15-minute interval
-    function formatTime(interval) {
-      let hours = Math.floor(interval / 4);
-      let minutes = (interval % 4) * 15;
-      let ampm = hours >= 12 ? 'pm' : 'am';
-
-      // Convert hours to 12-hour format
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-
-      // Add leading zero to minutes if necessary
-      minutes = minutes < 10 ? '0' + minutes : minutes;
-
-      return hours + ':' + minutes + ampm;
-    }
-
-
-    window.onload = updateCalendar();
-  </script> -->
+ 

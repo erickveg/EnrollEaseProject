@@ -4,6 +4,11 @@ from django.shortcuts import render
 from schedules.models import Section
 from .services import generate_course_list, grab_classes_with_selenium
 
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import json
+
+
 
 def schedule_index(request):
     schedules = Section.objects.all()
@@ -21,8 +26,32 @@ def schedule_detail(request, pk):
 
 def generate_course_view(request):
     # grab_classes_with_selenium()
-    simple_sections = generate_course_list()
+    # simple_sections = generate_course_list(courses)
 
-    if len(simple_sections) > 0:
-        return render(request, 'schedules/optimal_schedule.html', {'course_list': simple_sections})
+    # if len(simple_sections) > 0:
+    return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
 
+
+@require_POST
+def generate_schedules(request):    
+    try:
+        data = json.loads(request.body)
+
+        # Get the 'courses' list from the data
+        selected_courses = data.get('courses')
+        # Your logic to generate schedules goes here
+        schedules = generate_course_list(selected_courses)
+        return JsonResponse({'success': True, 'schedules': schedules})
+        # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error_message': str(e)})
+    
+@require_POST
+def update_scheduler(request):
+
+    # Your logic to generate schedules goes here
+    data = json.loads(request.body)
+
+    # Get the 'courses' list from the data
+    schedules = data.get('schedules')
+    return render(request, 'schedules/scheduler.html', {'schedules': schedules})

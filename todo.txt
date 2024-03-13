@@ -1,0 +1,4 @@
+1. Make Log-in work
+2. Grab courses from school website
+3. Optimize schedule for distance and space between classes
+4. Show online courses at the end of the schedule.

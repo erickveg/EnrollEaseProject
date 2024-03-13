@@ -21,12 +21,11 @@
 
   <!-- Load the static template library -->
   {% load static %}
-  
+
   <!-- Serialize course_list as JSON and embed it in the template -->
   <script>
-    var courseList = {{ course_list|safe }};
-    
-  </script>
+    var courseList = {{ schedules|safe }};    
+  </script>  
 
   <style>
     .event-overlay {
@@ -53,8 +52,16 @@
       </div>
 
       <!-- Main Content (50% of the screen) -->
-      <div class="col-md-6">
-        {% include './scheduler.html' %}
+      <div id="scheduler" class="col-md-6">
+        <!-- {% if courseList|length > 0 %}
+          {% include './scheduler.html' %}
+        {% else %} -->
+          <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">No courses selected!</h4>
+            <p>Please select at least one course to generate a schedule.</p>
+          </div>
+        <!-- {% endif %} -->
+        
       </div>
 
       <!-- Right Info Box (25% of the screen) -->

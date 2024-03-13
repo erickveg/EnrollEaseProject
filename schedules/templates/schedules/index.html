@@ -1,5 +1,6 @@
 
 {% load static %}
+{% csrf_token %}
 
 <!doctype html>
 <html lang="en">
@@ -32,10 +33,10 @@
 			<div class="row justify-content-center">
 				<div class="col-lg-4 d-flex justify-content-center align-items-center">
 					<select class="js-select2" multiple="multiple">
-						<option value="O1" data-badge="">BUS100</option>
-						<option value="O2" data-badge="">CSE382</option>
-						<option value="O3" data-badge="">CHILD210</option>
-						<option value="O4" data-badge="">ED444</option>
+						<option value="BUS 100" data-badge="">BUS100</option>
+						<option value="CSE 382" data-badge="">CSE382</option>
+						<option value="CHILD 210" data-badge="">CHILD210</option>
+						<option value="ED 444" data-badge="">ED444</option>
 					</select>
 				</div>
 			</div>
@@ -43,14 +44,99 @@
 	</section>
 
 	<!-- <button type="button" class="btn btn-primary btn-lg">Large button</button> -->
-	<button type="button" class="btn btn-success btn-lg fixed-button">Generate Schedules</button>
+
+		<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg fixed-button">Generate Schedules</button>
+	
 
 
-	<script src="{% static 'js/jquery.min.js' %}"></script>	
+	<!-- <script src="{% static 'js/jquery.min.js' %}"></script>	 -->
+	<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+	<script src="{% static 'js/jquery-3.7.1.js' %}"></script> 
+	<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+	<!-- <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>  -->
 	<script src="{% static 'js/popper.js' %}"></script>
 	<script src="{% static 'js/bootstrap.min.js' %}"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
 	<script src="{% static 'js/main.js' %}"></script>
+
+	<script>
+		document.getElementById('generateScheduleButton').addEventListener('click', function() {
+			// Get the selected courses from the select element
+			var selectedCourses = Array.from(document.querySelectorAll('.js-select2 option:checked')).map(option => option.value);
+
+			// Get the CSRF token from the cookie (use the Django CSRF_COOKIE_NAME)
+			var csrftoken = Cookies.get('csrftoken');
+
+			// Make an AJAX request to the Django view using fetch
+			fetch('/generate_schedules/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRFToken': csrftoken  // Include the CSRF token in the headers
+				},
+				body: JSON.stringify({ courses: selectedCourses }),
+			})
+			.then(response => response.json())
+			.then(data => {
+				// Update the scheduler with the new schedules
+				updateScheduler(data.schedules);
+			})
+			.catch(error => {
+				console.error('Error:', error);
+			});
+		});
+		
+
+		function updateScheduler(schedules) {
+			var csrftoken = Cookies.get('csrftoken');
+
+			fetch('/update_scheduler/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRFToken': csrftoken  // Include the CSRF token in the headers
+				},
+				body: JSON.stringify({ schedules: schedules }),
+			})
+			.then(response => response.text()).then(data => {
+				// Replace the scheduler part of the page with the new HTML
+				document.getElementById('scheduler').innerHTML = data;
+				nodeScriptReplace(document.getElementById('scheduler'));					
+			}).catch(error => {
+				console.error('Error:', error);
+			});
+		}	
+
+		function nodeScriptReplace(node) {
+        if ( nodeScriptIs(node) === true ) {
+                node.parentNode.replaceChild( nodeScriptClone(node) , node );
+        }
+        else {
+                var i = -1, children = node.childNodes;
+                while ( ++i < children.length ) {
+                      nodeScriptReplace( children[i] );
+                }
+        }
+
+        return node;
+		}
+		function nodeScriptClone(node){
+				var script  = document.createElement("script");
+				script.text = node.innerHTML;
+
+				var i = -1, attrs = node.attributes, attr;
+				while ( ++i < attrs.length ) {                                    
+					script.setAttribute( (attr = attrs[i]).name, attr.value );
+				}
+				return script;
+		}
+
+		function nodeScriptIs(node) {
+				return node.tagName === 'SCRIPT';
+		}
+	</script>
+
+
 
 	</body>
 </html>

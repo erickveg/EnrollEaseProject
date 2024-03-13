@@ -52,9 +52,9 @@ class SimpleSection:
         days_str = "".join(self.days)
         return f"{self.section_name} {self.time} {days_str}"
 
-def generate_course_list(): # The parameter should be a list of desired classes
-
-    desired_classes = ["ED 444", "CHILD 210", "CSE 382", "BUS 100"] # input has to have a space between the course code and the course number
+def generate_course_list(selected_courses): # The parameter should be a list of desired classes
+    desired_classes = selected_courses
+    # desired_classes = ["ED 444", "CHILD 210", "CSE 382", "BUS 100"] # input has to have a space between the course code and the course number
     # Fetch data from the database
     sections = Section.objects.all()
 
