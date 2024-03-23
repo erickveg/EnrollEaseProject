@@ -2,13 +2,13 @@
 
 from django.shortcuts import render
 from schedules.models import Section
-from .services import generate_course_list, grab_classes_with_selenium
+from .services import generate_course_list, grab_sections_with_selenium
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import json
 
-
+available_sections = []
 
 def schedule_index(request):
     schedules = Section.objects.all()
@@ -25,10 +25,9 @@ def schedule_detail(request, pk):
     return render(request, "schedules/schedule_detail.html", context)
 
 def generate_course_view(request):
-    # grab_classes_with_selenium()
-    # simple_sections = generate_course_list(courses)
+    available_sections = grab_sections_with_selenium()
 
-    # if len(simple_sections) > 0:
+    print(available_sections)
     return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
 
 
@@ -40,7 +39,7 @@ def generate_schedules(request):
         # Get the 'courses' list from the data
         selected_courses = data.get('courses')
         # Your logic to generate schedules goes here
-        schedules = generate_course_list(selected_courses)
+        schedules = generate_course_list(available_sections, selected_courses)
         return JsonResponse({'success': True, 'schedules': schedules})
         # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:

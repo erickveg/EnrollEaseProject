@@ -52,39 +52,39 @@ class SimpleSection:
         days_str = "".join(self.days)
         return f"{self.section_name} {self.time} {days_str}"
 
-def generate_course_list(selected_courses): # The parameter should be a list of desired classes
+def generate_course_list(available_sections, selected_courses): # The parameter should be a list of desired classes
     desired_classes = selected_courses
     # desired_classes = ["ED 444", "CHILD 210", "CSE 382", "BUS 100"] # input has to have a space between the course code and the course number
     # Fetch data from the database
-    sections = Section.objects.all()
+    # sections = Section.objects.all()
 
-    simple_sections = []
+    # simple_sections = []
 
-    for section in sections:
-        if section.course.course_code in desired_classes:
-            section_name = section.section_name_id
-            title = section.title
-            schedules = section.schedule.split(",")
-            for schedule in schedules:
-                days = ""
-                start_time = ""
-                end_time = ""
+    # for section in sections:
+    #     if section.course.course_code in desired_classes:
+    #         section_name = section.section_name_id
+    #         title = section.title
+    #         schedules = section.schedule.split(",")
+    #         for schedule in schedules:
+    #             days = ""
+    #             start_time = ""
+    #             end_time = ""
 
-                if schedule != "00:00-00:00AM":
-                    days = schedule.split(" ")[0] 
-                    times = schedule.split(" ")[1]
-                    times = _get_standard_time(times)
-                    start_time = times[0]
-                    end_time = times[1]
-                else:
-                    days = "X"
-                    start_time = "00:00"
-                    end_time = "00:00"
+    #             if schedule != "00:00-00:00AM":
+    #                 days = schedule.split(" ")[0] 
+    #                 times = schedule.split(" ")[1]
+    #                 times = _get_standard_time(times)
+    #                 start_time = times[0]
+    #                 end_time = times[1]
+    #             else:
+    #                 days = "X"
+    #                 start_time = "00:00"
+    #                 end_time = "00:00"
 
-                simple_section = SimpleSection(section_name, title, start_time, end_time, days)
-                simple_sections.append(simple_section)
+    #             simple_section = SimpleSection(section_name, title, start_time, end_time, days)
+    #             simple_sections.append(simple_section)
 
-    sections_combinations = generate_sections_combinations(simple_sections)    
+    sections_combinations = generate_sections_combinations(available_sections)    
     viable_combinations = select_viable_combinations(sections_combinations, desired_classes)
 
     course_list_dicts = [
@@ -214,36 +214,133 @@ def _get_standard_time(time_str : str):
 
         standard_time.append(time)
 
-        # if first_time:
-        #     standard_time += f"{time}-"
-        #     first_time = False
-        # else:
-        #     standard_time += time
+ 
 
     return standard_time
 
-def grab_classes_with_selenium():
+class Course:
+    def __init__(self, course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method):
+        self.course = course
+        self.course_section = course_section
+        self.title = title
+        self.instructor = instructor
+        self.seats_open = seats_open
+        self.status = status
+        self.start_time = start_time
+        self.end_time = end_time
+        self.days = days
+        self.room = room
+        self.class_type = class_type
+        self.delivery_method = delivery_method
+
+def grab_sections_with_selenium():
 
     from selenium import webdriver
     from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from bs4 import BeautifulSoup
 
+    def get_schedules_text(html_content):
+        soup = BeautifulSoup(html_content, "html.parser")
+        # Find all <li> elements within the <ul> with class "schedules"
+        schedule_elements = soup.select('ul.schedules li')
+        schedules_list = []
+        
+        for schedule in schedule_elements:
+            days = []
+            times = ""
+            room = schedule.find_all("div")[-1].get_text(strip=True)
+
+            if room == "Online Class":
+                days = ["X"]
+                times = "00:00-00:00AM"
+            else:
+                days = [d for d in schedule.get_text().split()[0] if d.isalpha()]
+                times = schedule.get_text().split()[1]
+
+
+            schedules_list.append({
+                'days': days,
+                'times': times,
+                'room': room
+            })
+
+        return schedules_list
+
+    # Start the WebDriver and load the page
     driver = webdriver.Chrome()
-    driver.get("https://secure.byui.edu/cas/login?service=https%3A%2F%2Fsecure.byui.edu%2Fcas%2Fidp%2Fprofile%2FSAML2%2FCallback%3FentityId%3Dstudent.byui.edu")
-    # driver.get("https://student.byui.edu/ICS/Academics/Academic_Information.jnz?portlet=Registration&screen=Add+Drop+Courses+BYUI&screenType=next")
+    wait = WebDriverWait(driver, 240) # 4 minutes
+    driver.maximize_window()
+    driver.get("https://student.byui.edu/ICS/Academics/")
 
-    # Find the input element by its name
-    input_element = driver.find_element(By.NAME, "pg0$V$tabSearch$txtTitleRestrictor")
+    # Click on the "Login" button
+    login_button = driver.find_element(By.ID, "jics-login-redirect-simple-button")
+    login_button.click()    
 
-    # Clear the existing value (if any)
-    input_element.clear()
+    # Wait until the byui number is visible
+    element = wait.until(EC.visibility_of_element_located((By.ID, "siteNavBar_welcomeBackBarLoggedIn_byuiINumber")))
 
-    # Set the new value
-    new_value = "Your desired value"
-    input_element.send_keys(new_value)
+    # Get the text content of the element
+    value = element.text
+    print(value)
 
-    # Press Enter to trigger the search (optional)
-    input_element.send_keys(Keys.RETURN)
+    # Click button on pop-up window
+    try:
+        button = driver.find_element(By.ID, "CP_V_Button1")
+        button.click()
+        print("Button clicked successfully!")
+    except Exception as e:
+        print("Button not found or does not exist on the page.")
 
+    # Click on the "Add or Drop Classes" button
+    link_element = driver.find_element(By.ID, "pg1_V_lnkAddDrop")
+    link_element.click()
+
+    # Put a "." in the Course Title search box and press "Enter
+    # This will return all courses
+    input_element = driver.find_element(By.ID, "pg0_V_tabSearch_txtTitleRestrictor")
+    input_element.send_keys(".")
+    input_element.send_keys(Keys.ENTER)
+
+    # Wait until the table with id "tableCourses" is visible and all its rows are present
+    wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
+
+    # Now find all table rows in the tbody
+    rows = driver.find_elements(By.CSS_SELECTOR, "#tableCourses tbody tr")
+
+    # List to hold Course objects
+    courses = []
+
+    # Iterate through each row and extract data
+    for row in rows:    
+        
+        cells = row.find_elements(By.CSS_SELECTOR, "td")
+
+        if cells:
+            section_name_id = str(cells[1].text.replace(" ", ""))
+            course = str(section_name_id.split("-")[0])
+            course_section = str(section_name_id.split("-")[1])
+            title = str(cells[2].text)
+            instructor = str(cells[4].text)
+            seats_open = [int(num.strip()) for num in str(cells[5].text).split('∕')]
+            status = str(cells[6].text)
+            class_type = cells[8].text
+            delivery_method = cells[9].text
+            schedules = get_schedules_text(cells[7].get_attribute('innerHTML'))
+
+            for schedule in schedules:
+                room = schedule['room']
+                days = schedule['days']
+                times = _get_standard_time(schedule['times'])
+                start_time = times[0]
+                end_time = times[1]
+                    
+                # Create Course object and append to list
+                course_obj = Course(course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method)
+                courses.append(course_obj)
+
+    return courses
                             
                 
     

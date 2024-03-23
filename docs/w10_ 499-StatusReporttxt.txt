@@ -1,0 +1,32 @@
+Name: Erick Vega
+Project Title: EnrollEase (Smart Class Registration)
+
+Team Members:
+
+Overall Status: On schedule
+
+Number of hours worked since last update: 7
+Number of hours worked on the project thus far: 59
+Total number of hours anticipated for completion: 33
+
+Accomplishments:
+- Fixed minor scheduling issues when selecting courses
+- Login system works
+- Implemented two endpoints to generate and update main scheduler page
+- Show website to other students and their impressed by the solution
+
+
+Challenges:
+- Scheduler doesn't reset when requesting new schedules
+
+
+Plans / Goals for next week:
+- Have Selenium working to grab classes
+- Weight schedules by distance
+
+Accountability plan: (What is your plan to keep yourself honest and follow through with the goals that you have outlined?)
+- I will spend at least 2 hours every morning to work on this project. 
+
+
+Other comments:
+

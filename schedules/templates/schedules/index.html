@@ -43,17 +43,11 @@
 		</div>
 	</section>
 
-	<!-- <button type="button" class="btn btn-primary btn-lg">Large button</button> -->
-
-		<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg fixed-button">Generate Schedules</button>
+	<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg fixed-button">Generate Schedules</button>
 	
 
-
-	<!-- <script src="{% static 'js/jquery.min.js' %}"></script>	 -->
 	<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 	<script src="{% static 'js/jquery-3.7.1.js' %}"></script> 
-	<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
-	<!-- <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>  -->
 	<script src="{% static 'js/popper.js' %}"></script>
 	<script src="{% static 'js/bootstrap.min.js' %}"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
@@ -86,8 +80,8 @@
 			});
 		});
 		
-
 		function updateScheduler(schedules) {
+			// $('#scheduler').empty();
 			var csrftoken = Cookies.get('csrftoken');
 
 			fetch('/update_scheduler/', {
@@ -100,6 +94,7 @@
 			})
 			.then(response => response.text()).then(data => {
 				// Replace the scheduler part of the page with the new HTML
+				$('#scheduler').empty();
 				document.getElementById('scheduler').innerHTML = data;
 				nodeScriptReplace(document.getElementById('scheduler'));					
 			}).catch(error => {
