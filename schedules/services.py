@@ -58,10 +58,11 @@ def generate_course_list(available_sections, selected_courses): # The parameter 
     # Fetch data from the database
     # sections = Section.objects.all()
 
-    # simple_sections = []
+    filtered_available_sections = []
 
-    # for section in sections:
-    #     if section.course.course_code in desired_classes:
+    for section in available_sections:
+        if section.course in desired_classes:
+            filtered_available_sections.append(section)
     #         section_name = section.section_name_id
     #         title = section.title
     #         schedules = section.schedule.split(",")
@@ -84,7 +85,7 @@ def generate_course_list(available_sections, selected_courses): # The parameter 
     #             simple_section = SimpleSection(section_name, title, start_time, end_time, days)
     #             simple_sections.append(simple_section)
 
-    sections_combinations = generate_sections_combinations(available_sections)    
+    sections_combinations = generate_sections_combinations(filtered_available_sections)    
     viable_combinations = select_viable_combinations(sections_combinations, desired_classes)
 
     course_list_dicts = [
@@ -300,9 +301,20 @@ def grab_sections_with_selenium():
     # Put a "." in the Course Title search box and press "Enter
     # This will return all courses
     input_element = driver.find_element(By.ID, "pg0_V_tabSearch_txtTitleRestrictor")
-    input_element.send_keys(".")
+    input_element.send_keys(" ")
     input_element.send_keys(Keys.ENTER)
 
+    # TODO: Click on the "Show All" link to display all courses
+    # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
+    # show_all.click()
+
+    # Wait until the table with id "tableCourses" is visible and all its rows are present
+    wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
+
+    # TODO: Click on the "Show All" link to display all courses
+    # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
+    # show_all.click()
+    
     # Wait until the table with id "tableCourses" is visible and all its rows are present
     wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
 

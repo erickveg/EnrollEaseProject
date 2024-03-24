@@ -25,6 +25,7 @@ def schedule_detail(request, pk):
     return render(request, "schedules/schedule_detail.html", context)
 
 def generate_course_view(request):
+    global available_sections
     available_sections = grab_sections_with_selenium()
 
     print(available_sections)
@@ -34,6 +35,7 @@ def generate_course_view(request):
 @require_POST
 def generate_schedules(request):    
     try:
+        global available_sections
         data = json.loads(request.body)
 
         # Get the 'courses' list from the data
