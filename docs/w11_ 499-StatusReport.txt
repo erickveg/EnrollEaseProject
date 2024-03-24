@@ -1,0 +1,29 @@
+Name: Erick Vega
+Project Title: EnrollEase (Smart Class Registration)
+
+Team Members:
+
+Overall Status: On schedule
+
+Number of hours worked since last update: 7
+Number of hours worked on the project thus far: 66
+Total number of hours anticipated for completion: 26
+
+Accomplishments:
+- Web scrapping classes from University website is working
+
+
+Challenges:
+- Web scrapping all classes take too long now because there are 3919 different sections. I am going to only extract the classes needed by the student instead of the entire catalog, and provide a fixed list of courses to choose from.
+
+
+Plans / Goals for next week:
+- Optimize web scrapping speed
+- Weight schedules by distance
+
+Accountability plan: (What is your plan to keep yourself honest and follow through with the goals that you have outlined?)
+- I will spend at least 2 hours every morning to work on this project. 
+
+
+Other comments:
+

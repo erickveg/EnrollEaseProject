@@ -253,7 +253,7 @@ def grab_sections_with_selenium():
             times = ""
             room = schedule.find_all("div")[-1].get_text(strip=True)
 
-            if room == "Online Class":
+            if room in ["Online Class", "Arranged", "Blended (part-online)", "Flexible Location"]:
                 days = ["X"]
                 times = "00:00-00:00AM"
             else:
@@ -312,9 +312,9 @@ def grab_sections_with_selenium():
     wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
 
     # TODO: Click on the "Show All" link to display all courses
-    # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
-    # show_all.click()
-    
+    show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
+    show_all.click()
+
     # Wait until the table with id "tableCourses" is visible and all its rows are present
     wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
 
@@ -323,6 +323,7 @@ def grab_sections_with_selenium():
 
     # List to hold Course objects
     courses = []
+    course_codes = []
 
     # Iterate through each row and extract data
     for row in rows:    
@@ -332,6 +333,7 @@ def grab_sections_with_selenium():
         if cells:
             section_name_id = str(cells[1].text.replace(" ", ""))
             course = str(section_name_id.split("-")[0])
+            course_codes.append(course)
             course_section = str(section_name_id.split("-")[1])
             title = str(cells[2].text)
             instructor = str(cells[4].text)
@@ -352,7 +354,13 @@ def grab_sections_with_selenium():
                 course_obj = Course(course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method)
                 courses.append(course_obj)
 
-    return courses
+    # Specify the file path where you want to save the list
+    import json
+    file_path = 'my_list.json'
+
+    # Open the file in write mode and save the list as JSON
+    with open(file_path, 'w') as file:
+        json.dump(course_codes, file)
                             
                 
     
