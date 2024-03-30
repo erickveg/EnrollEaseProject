@@ -1,5 +1,6 @@
 # schedules/views.py
 
+import pickle
 from django.shortcuts import render
 from schedules.models import Section
 from .services import generate_course_list, grab_sections_with_selenium
@@ -26,10 +27,12 @@ def schedule_detail(request, pk):
 
 def generate_course_view(request):
     global available_sections
-    available_sections = grab_sections_with_selenium()
+    # available_sections = grab_sections_with_selenium()
+    with open("course_list.pkl", "rb") as f:
+        available_sections = pickle.load(f)
 
-    print(available_sections)
-    return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
+        # print(available_sections)s
+        return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
 
 
 @require_POST
@@ -42,7 +45,9 @@ def generate_schedules(request):
         selected_courses = data.get('courses')
         # Your logic to generate schedules goes here
         schedules = generate_course_list(available_sections, selected_courses)
-        return JsonResponse({'success': True, 'schedules': schedules})
+        schedule_dicts = [schedule.to_dict() for schedule in schedules]
+
+        return JsonResponse({'success': True, 'schedules': schedule_dicts})
         # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:
         return JsonResponse({'success': False, 'error_message': str(e)})

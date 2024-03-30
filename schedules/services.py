@@ -1,3 +1,5 @@
+import datetime
+import pickle
 from .models import Section, Course, School
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -51,67 +53,56 @@ class SimpleSection:
     def __repr__(self):
         days_str = "".join(self.days)
         return f"{self.section_name} {self.time} {days_str}"
+    
+class Schedule:
+    def __init__(self, sections):
+        self.sections = sections
+        self.walk_time = 0
+        self.gap_time = 0
 
-def generate_course_list(available_sections, selected_courses): # The parameter should be a list of desired classes
+    def __str__(self):
+        return f"{self.sections} {self.walk_time} {self.gap_time}"
+    
+    def __repr__(self):
+        return f"{self.sections} {self.walk_time} {self.gap_time}"
+    
+    def to_dict(self):
+        return {
+            'sections': [section.to_dict() for section in self.sections],
+            'walk_time': self.walk_time,
+            'gap_time': self.gap_time
+        }
+
+def generate_course_list(available_sections, selected_courses): 
     desired_classes = selected_courses
-    # desired_classes = ["ED 444", "CHILD 210", "CSE 382", "BUS 100"] # input has to have a space between the course code and the course number
-    # Fetch data from the database
-    # sections = Section.objects.all()
 
     filtered_available_sections = []
 
     for section in available_sections:
         if section.course in desired_classes:
             filtered_available_sections.append(section)
-    #         section_name = section.section_name_id
-    #         title = section.title
-    #         schedules = section.schedule.split(",")
-    #         for schedule in schedules:
-    #             days = ""
-    #             start_time = ""
-    #             end_time = ""
-
-    #             if schedule != "00:00-00:00AM":
-    #                 days = schedule.split(" ")[0] 
-    #                 times = schedule.split(" ")[1]
-    #                 times = _get_standard_time(times)
-    #                 start_time = times[0]
-    #                 end_time = times[1]
-    #             else:
-    #                 days = "X"
-    #                 start_time = "00:00"
-    #                 end_time = "00:00"
-
-    #             simple_section = SimpleSection(section_name, title, start_time, end_time, days)
-    #             simple_sections.append(simple_section)
 
     sections_combinations = generate_sections_combinations(filtered_available_sections)    
     viable_combinations = select_viable_combinations(sections_combinations, desired_classes)
+    schedules = generate_schedule_objects(viable_combinations)
+    compute_gap_time(schedules)
 
-    course_list_dicts = [
-    [
-        {'section_name': section.section_name, 
-         'title' : section.title,
-         'start_time': section.start_time,
-         'end_time' : section.end_time,
-         'days': section.days}
-        for section in inner_list
-    ]
-    for inner_list in viable_combinations[:5]
-    ]
+    return get_top_10_schedules(schedules)
 
-    return course_list_dicts
+def generate_schedule_objects(viable_combinations):
+    schedules = []
 
+    for combination in viable_combinations:
+        sections = []
+        for section in combination:
+            sections.append(section)
+        schedules.append(Schedule(sections))
 
-    # Find the combination with the same length as the desired_classes
-    # TODO:
-    # Fix this cases [BUS100_A5 00:00-00:00 X, CSE382_01 1245-1345 MWF, ED444_01 1015-1115 TR, CHILD210_05 0945-1115 TR] ED444 and CHILD210 are crashing.
-    # To fix it we might need to store times individually, and then modify the same_time_in_combination function.
-
+    return schedules
 
 def same_code_in_combination(section, combination):
     for s in combination:
-        if section.section_name.split("_")[0] in s.section_name.split("_")[0]:
+        if section.section_name.split("-")[0] in s.section_name.split("-")[0]:
             return True
     return False
 
@@ -148,21 +139,9 @@ def generate_sections_combinations(sections):
             for c in range(combinations_length):
                 combination = combinations[c]
 
-                # if the secondary_course code is not in the list of combinations AND
-                # if the seconday_course is not in the same list sub-list
-
-                # if secondary_course.section_name == "CHILD210_05" and combination[-1].section_name == "ED444_01":
-                #     print("hello")
-
-                # smd = same_days_in_combination(secondary_course, combination)
-                # stc = same_time_in_combination(secondary_course, combination)
-                # scic = same_code_in_combination(secondary_course, combination)
-
                 if (not same_code_in_combination(secondary_course, combination)) and\
                 (not same_days_in_combination(secondary_course, combination) and (same_time_in_combination(secondary_course, combination)) or\
                  not same_time_in_combination(secondary_course, combination)):   
-                    if secondary_course.section_name == "CHILD210_05" and combination[-1].section_name == "ED444_01":
-                        print("hello")
 
                     temp_comb = combination[:]
                     temp_comb.append(secondary_course)
@@ -178,10 +157,60 @@ def select_viable_combinations(master_combinations, desired_classes):
 
     for m in master_combinations:
         for combination in m:
+            # TODO: Deal when not all the desired classes are in the combination
             if len(combination) == len(desired_classes):
                 viable_combinations.append(combination)
-
     return viable_combinations
+
+def compute_gap_time(schedules):
+    # Function to calculate time difference between two times
+    from datetime import datetime
+
+    def time_difference(start_time1, end_time1, start_time2):                    
+        time_format = "%H%M"
+        time1 = datetime.strptime(end_time1, time_format)
+        time2 = datetime.strptime(start_time2, time_format)
+        return (time2 - time1).total_seconds() // 60  # Difference in minutes
+
+    # Group sections by day
+    sections_by_day = {}
+    for schedule in schedules:
+
+        days_computed = 0
+        sum_diffs = 0
+
+        for section in schedule.sections:
+            for day in section.days:
+                if day not in sections_by_day:
+                    sections_by_day[day] = []
+                sections_by_day[day].append(section)
+
+        # Calculate time difference between classes on the same day
+        for day, sections_in_day in sections_by_day.items():
+            if len(sections_in_day) > 1:  # Only consider days with more than one section
+                days_computed += 1
+
+                sections_in_day.sort(key=lambda x: x.start_time)  # Sort sections by start time
+                for i in range(1, len(sections_in_day)):
+                    time_diff = time_difference(                        
+                        sections_in_day[i - 1].start_time,
+                        sections_in_day[i - 1].end_time,
+                        sections_in_day[i].start_time
+                    )
+                    sum_diffs += time_diff
+                    # print(f"On {day}, between {sections_in_day[i-1]['section_name']} and {sections_in_day[i]['section_name']}: {time_diff} minutes")
+        
+        # Add gap time to the schedule
+        # schedule.gap_time = sum_diffs / days_computed if days_computed > 0 else 0
+        schedule.gap_time = sum_diffs
+        sections_by_day = {}
+                    
+def get_top_10_schedules(schedules):
+    # Sort the list of Schedule objects based on their gap_time attribute
+    sorted_schedules = sorted(schedules, key=lambda x: x.gap_time)
+    
+    # Return the top 10 schedules
+    return sorted_schedules[:10]
 
 def _get_standard_time(time_str : str):
     times = time_str.split("-")
@@ -220,7 +249,8 @@ def _get_standard_time(time_str : str):
     return standard_time
 
 class Course:
-    def __init__(self, course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method):
+    def __init__(self, section_name, course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method):
+        self.section_name = section_name
         self.course = course
         self.course_section = course_section
         self.title = title
@@ -233,6 +263,23 @@ class Course:
         self.room = room
         self.class_type = class_type
         self.delivery_method = delivery_method
+
+    def to_dict(self):
+        return {
+            'section_name': self.section_name,
+            'course': self.course,
+            'course_section': self.course_section,
+            'title': self.title,
+            'instructor': self.instructor,
+            'seats_open': self.seats_open,
+            'status': self.status,
+            'start_time': self.start_time,
+            'end_time': self.end_time,
+            'days': self.days,
+            'room': self.room,
+            'class_type': self.class_type,
+            'delivery_method': self.delivery_method
+        }
 
 def grab_sections_with_selenium():
 
@@ -312,8 +359,8 @@ def grab_sections_with_selenium():
     wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
 
     # TODO: Click on the "Show All" link to display all courses
-    show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
-    show_all.click()
+    # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
+    # show_all.click()
 
     # Wait until the table with id "tableCourses" is visible and all its rows are present
     wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
@@ -331,10 +378,9 @@ def grab_sections_with_selenium():
         cells = row.find_elements(By.CSS_SELECTOR, "td")
 
         if cells:
-            section_name_id = str(cells[1].text.replace(" ", ""))
-            course = str(section_name_id.split("-")[0])
-            course_codes.append(course)
-            course_section = str(section_name_id.split("-")[1])
+            section_name = str(cells[1].text.replace(" ", ""))
+            course = str(section_name.split("-")[0])          
+            course_section = str(section_name.split("-")[1])
             title = str(cells[2].text)
             instructor = str(cells[4].text)
             seats_open = [int(num.strip()) for num in str(cells[5].text).split('∕')]
@@ -351,16 +397,13 @@ def grab_sections_with_selenium():
                 end_time = times[1]
                     
                 # Create Course object and append to list
-                course_obj = Course(course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method)
+                course_obj = Course(section_name, course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method)
                 courses.append(course_obj)
 
-    # Specify the file path where you want to save the list
-    import json
-    file_path = 'my_list.json'
+    # # Specify the file path where you want to save the list
+    with open("course_list.pkl", "wb") as f:
+        pickle.dump(courses, f)
 
-    # Open the file in write mode and save the list as JSON
-    with open(file_path, 'w') as file:
-        json.dump(course_codes, file)
-                            
+    return courses
                 
     

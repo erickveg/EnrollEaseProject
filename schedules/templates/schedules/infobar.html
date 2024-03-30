@@ -1,4 +1,15 @@
 <div class="container col-lg-8 mb-4">
     <br>
     <center><h2>Schedule Information:</h2></center>
+    <ul>
+        {% for section in schedules.sections %}
+            <li>
+                <h2>{{ section.section_name }}</h2>
+                <p>Title: {{ section.title }}</p>
+                <p>Professor: {{ section.instructor }}</p>
+                <p>Room: {{ section.room }}</p>
+                <p>Gap Time: {{ schedules.gap_time }}</p>
+            </li>
+        {% endfor %}
+        </ul>
 </div>
