@@ -85,7 +85,7 @@ def generate_course_list(available_sections, selected_courses):
     sections_combinations = generate_sections_combinations(filtered_available_sections)    
     viable_combinations = select_viable_combinations(sections_combinations, desired_classes)
     schedules = generate_schedule_objects(viable_combinations)
-    compute_gap_time(schedules)
+    schedules = add_gap_time(schedules)
 
     return get_top_10_schedules(schedules)
 
@@ -162,7 +162,7 @@ def select_viable_combinations(master_combinations, desired_classes):
                 viable_combinations.append(combination)
     return viable_combinations
 
-def compute_gap_time(schedules):
+def add_gap_time(schedules):
     # Function to calculate time difference between two times
     from datetime import datetime
 
@@ -204,6 +204,8 @@ def compute_gap_time(schedules):
         # schedule.gap_time = sum_diffs / days_computed if days_computed > 0 else 0
         schedule.gap_time = sum_diffs
         sections_by_day = {}
+    
+    return schedules
                     
 def get_top_10_schedules(schedules):
     # Sort the list of Schedule objects based on their gap_time attribute
