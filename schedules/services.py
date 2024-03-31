@@ -4,55 +4,55 @@ from .models import Section, Course, School
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
-def create_and_save_objects(courses_data):
-    try:
-        # Define your School instance (if needed)
-        school_instance = School.objects.create(name="byui")
+# def create_and_save_objects(courses_data):
+#     try:
+#         # Define your School instance (if needed)
+#         school_instance = School.objects.create(name="byui")
 
-        # Create and save objects
-        for course_data in courses_data:
-            course_instance = Course.objects.create(
-                school=school_instance,
-                course_code=course_data["course_code"],
-            )
+#         # Create and save objects
+#         for course_data in courses_data:
+#             course_instance = Course.objects.create(
+#                 school=school_instance,
+#                 course_code=course_data["course_code"],
+#             )
 
-            for section_data in course_data["sections"]:
-                Section.objects.create(
-                    course=course_instance,
-                    course_section=section_data["course_section"],
-                    title=section_data["title"],
-                    credits=section_data["credits"],
-                    instructor=section_data["instructor"],
-                    seats_open=section_data["seats_open"],
-                    status=section_data["status"],
-                    schedule=section_data["schedule"],
-                    room=section_data["room"],
-                    class_type=section_data["class_type"],
-                    delivery_method=section_data["delivery_method"],
-                )
+#             for section_data in course_data["sections"]:
+#                 Section.objects.create(
+#                     course=course_instance,
+#                     course_section=section_data["course_section"],
+#                     title=section_data["title"],
+#                     credits=section_data["credits"],
+#                     instructor=section_data["instructor"],
+#                     seats_open=section_data["seats_open"],
+#                     status=section_data["status"],
+#                     schedule=section_data["schedule"],
+#                     room=section_data["room"],
+#                     class_type=section_data["class_type"],
+#                     delivery_method=section_data["delivery_method"],
+#                 )
 
-        print("Objects created and saved successfully.")
+#         print("Objects created and saved successfully.")
 
-    except School.DoesNotExist:
-        print("School with the specified name does not exist.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+#     except School.DoesNotExist:
+#         print("School with the specified name does not exist.")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
 
-class SimpleSection:
-    def __init__(self, section_name, title, start_time, end_time, days):
-        self.section_name = section_name
-        self.title = title
-        self.start_time = start_time
-        self.end_time = end_time
-        self.days = [d for d in days if d.isalpha()]
+# class SimpleSection:
+#     def __init__(self, section_name, title, start_time, end_time, days):
+#         self.section_name = section_name
+#         self.title = title
+#         self.start_time = start_time
+#         self.end_time = end_time
+#         self.days = [d for d in days if d.isalpha()]
 
-    def __str__(self):
-        days_str = "".join(self.days)
-        return f"{self.section_name} {self.time} {days_str}"
+#     def __str__(self):
+#         days_str = "".join(self.days)
+#         return f"{self.section_name} {self.time} {days_str}"
     
-    def __repr__(self):
-        days_str = "".join(self.days)
-        return f"{self.section_name} {self.time} {days_str}"
+#     def __repr__(self):
+#         days_str = "".join(self.days)
+#         return f"{self.section_name} {self.time} {days_str}"
     
 class Schedule:
     def __init__(self, sections):
@@ -198,19 +198,23 @@ def add_gap_time(schedules):
                         sections_in_day[i].start_time
                     )
                     sum_diffs += time_diff
-                    # print(f"On {day}, between {sections_in_day[i-1]['section_name']} and {sections_in_day[i]['section_name']}: {time_diff} minutes")
         
         # Add gap time to the schedule
-        # schedule.gap_time = sum_diffs / days_computed if days_computed > 0 else 0
         schedule.gap_time = sum_diffs
         sections_by_day = {}
     
     return schedules
                     
 def get_top_10_schedules(schedules):
-    # Sort the list of Schedule objects based on their gap_time attribute
+    # Sort the list of Schedule objects based on gap_time in ascending order
     sorted_schedules = sorted(schedules, key=lambda x: x.gap_time)
-    
+
+    # Sort the sorted_schedules based on the length of sections in descending order
+    # sorted_schedules = sorted(sorted_schedules, key=lambda x: len(x.sections), reverse=True)
+
+    # # Sort the sorted_schedules based on the smallest number of days in the sections list in ascending order
+    # sorted_schedules = sorted(sorted_schedules, key=lambda x: min(len(course.days) for course in x.sections))
+
     # Return the top 10 schedules
     return sorted_schedules[:10]
 
@@ -244,9 +248,7 @@ def _get_standard_time(time_str : str):
         else:
             time = time.replace(":", "")
 
-        standard_time.append(time)
-
- 
+        standard_time.append(time) 
 
     return standard_time
 
