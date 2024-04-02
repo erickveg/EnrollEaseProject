@@ -26,13 +26,8 @@ def schedule_detail(request, pk):
     return render(request, "schedules/schedule_detail.html", context)
 
 def generate_course_view(request):
-    global available_sections
-    # available_sections = grab_sections_with_selenium()
-    with open("course_list.pkl", "rb") as f:
-        available_sections = pickle.load(f)
-
-        # print(available_sections)s
-        return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
+    
+    return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
 
 
 @require_POST
@@ -43,12 +38,18 @@ def generate_schedules(request):
 
         # Get the 'courses' list from the data
         selected_courses = data.get('courses')
+
+        # with open("course_list_2.pkl", "rb") as f:
+        #     available_sections = pickle.load(f)
+
+        available_sections = grab_sections_with_selenium(selected_courses)
+        
         # Your logic to generate schedules goes here
         schedules = generate_course_list(available_sections, selected_courses)
         schedule_dicts = [schedule.to_dict() for schedule in schedules]
 
         return JsonResponse({'success': True, 'schedules': schedule_dicts})
-        # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
+            # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:
         return JsonResponse({'success': False, 'error_message': str(e)})
     

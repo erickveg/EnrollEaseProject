@@ -23,15 +23,20 @@
 
           <div id="pageTitle" class="container col-lg-8 mb-4">
           </div>
-
-            <div class="form-inline justify-content-end mb-2">
-              <button class="btn btn-outline-success col-sm-1" id="previous" onclick="previous()">
-                  <i class="fas fa-arrow-left"></i>
-              </button>
-              <button class="btn btn-outline-success col-sm-1" id="next" onclick="next()">
-                  <i class="fas fa-arrow-right"></i>
-              </button>
-          </div>
+            
+          <div class="form-inline justify-content-end mb-2">
+            <div class="col-auto">
+              <h2 id="schedule-number"></h2>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-success" id="previous" onclick="previous()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button class="btn btn-outline-success" id="next" onclick="next()">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
           <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-bottom:1px solid #6D6D6D;">
             <tbody><tr>
               <td valign="top"><table cellpadding="0" cellspacing="0" border="0" width="40" style="border-left:1px solid #6D6D6D;">
@@ -200,6 +205,7 @@
           <div id="infobar">
               <h2>Course Information:</h2>
               <p id="gap-time"></p>
+              <p id="walk-time"></p>
               <ul id="section-info-list" class="list-group">
               </ul>
           </div>
@@ -224,6 +230,7 @@
       clearCalendar();
       clearOnlineCourses();
       clearInfoBar();
+      clearScheduleNumber();
 
       // Increment the currentIndex
       currentIndex = (currentIndex + 1) % courseList.length;
@@ -237,6 +244,7 @@
       clearCalendar();
       clearOnlineCourses();
       clearInfoBar();
+      clearScheduleNumber();
 
       // Increment the currentIndex
       currentIndex = (currentIndex - 1 + courseList.length) % courseList.length;
@@ -269,6 +277,11 @@
     function clearInfoBar() {
       var infobar = document.getElementById("section-info-list");
       infobar.innerHTML = ``;
+    }
+
+    function clearScheduleNumber() {
+      var scheduleNumber = document.getElementById("schedule-number");
+      scheduleNumber.innerHTML = ``;
     }
 
 
@@ -330,7 +343,6 @@
       return infoItem;
     }
 
-
     // Function to add courses to the table
     function addCoursesToTable() {
 
@@ -352,6 +364,7 @@
       console.log(courseList[currentIndex]);
       var course_pack = courseList[currentIndex].sections;
       var gap_time = courseList[currentIndex].gap_time;
+      var walk_time = courseList[currentIndex].walk_time;
 
       var monday = document.createElement("td");
       monday.className = "monday-column"; // Add class name
@@ -380,6 +393,12 @@
       var gapTime = document.getElementById("gap-time");
       gapTime.innerHTML = `Gap Time: ${gap_time} minutes`;
 
+      var walkTime = document.getElementById("walk-time");
+      walkTime.innerHTML = `Walk Time: ${walk_time} minutes`;
+
+      var scheduleNumber = document.getElementById("schedule-number");
+      scheduleNumber.innerHTML = `${currentIndex + 1} / ${courseList.length}`;
+
 
       var row = document.createElement("tr");
       row.appendChild(monday);
@@ -397,7 +416,7 @@
         // var time = single_course.time.split("-");
         var start = single_course.start_time;
         var end = single_course.end_time;
-        console.log(start);
+        // console.log(start);
 
         if (single_course.days.includes("M")) {
           monday.appendChild(createTableData(single_course, topFromTime[start], j));

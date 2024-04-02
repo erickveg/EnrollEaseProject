@@ -108,17 +108,13 @@ def same_code_in_combination(section, combination):
 
 def same_time_in_combination(section, combination):
     for s in combination:
-        # if section.section_name == "CHILD210_05" and s.section_name == "ED444_01":
-        #     print("hello")
         if (s.start_time <= section.start_time <= s.end_time) or (s.start_time <= section.end_time <= s.end_time):
             return True
     return False
 
 def same_days_in_combination(section, combination):
     for s in combination:
-        # if section.section_name == "CHILD210_05" and s.section_name == "ED444_01":
-        #     print("hello")
-        if any(item in s.days for item in section.days):
+        if any(item in s.days for item in section.days if item != "X"):
             return True
     return False
 
@@ -155,16 +151,44 @@ def generate_sections_combinations(sections):
 def select_viable_combinations(master_combinations, desired_classes):
     viable_combinations = []
 
+    # sorted_schedules = sorted(master_combinations, key=lambda x: max(len(schedule) for schedule in x), reverse=True)
+
     for m in master_combinations:
-        for combination in m:
-            # TODO: Deal when not all the desired classes are in the combination
+        for combination in m:            
             if len(combination) == len(desired_classes):
                 viable_combinations.append(combination)
+
+    if len(viable_combinations) == 0:
+        for m in master_combinations:
+            for combination in m:
+                if len(combination) == len(desired_classes) - 1:
+                    viable_combinations.append(combination)
+       
     return viable_combinations
 
 def add_gap_time(schedules):
     # Function to calculate time difference between two times
     from datetime import datetime
+
+    building_coords = {
+        "STC": (43.81482716609083, -111.78465188594157),
+        "Smith": (43.81946844117841, -111.78156583159867),
+        "Hart": (43.819477716299964, -111.78513488179013),
+        "Benson BEN": (43.81581970258082, -111.78326664570383), 
+        "Spori": (43.82112976198168, -111.7824281188138),
+        "Taylor": (43.81708422905652, -111.7820116861666),
+        "Snow": (43.821432751162114, -111.78307591092198),
+        "Kimball": (43.81711275584295, -111.78144440383853),
+        "Clarke": (43.820310064473176, -111.78163751349007),
+        "Austin": (43.81559920195993, -111.78406273556696),
+        "Hinckley": (43.81626025760197, -111.77995970276748),
+        "Romney": (43.820188076471176, -111.78326427081778),
+        "Ricks": (43.815141193070275, -111.78117033348093),
+        "Biddulph": (43.81730480509058, -111.78499971786952),
+        "McKay": (43.81962547189932, -111.78268142783612),
+        "ETC": (43.81419950065544, -111.78284905411786),
+        "Rigby": (43.81729334232883, -111.78434583292083),
+    }
 
     def time_difference(start_time1, end_time1, start_time2):                    
         time_format = "%H%M"
@@ -178,6 +202,8 @@ def add_gap_time(schedules):
 
         days_computed = 0
         sum_diffs = 0
+        walk_distance_m = 0
+        walk_time = 0
 
         for section in schedule.sections:
             for day in section.days:
@@ -197,13 +223,61 @@ def add_gap_time(schedules):
                         sections_in_day[i - 1].end_time,
                         sections_in_day[i].start_time
                     )
+
+                    room1 = sections_in_day[i - 1].room.split(" ")[0]
+                    room2 = sections_in_day[i].room.split(" ")[0]
+
+                    if "Online" not in [room1, room2]:
+                        walk_distance_m += haversine(building_coords[room1], building_coords[room2])
+                        walk_time += walking_time(walk_distance_m, 4.82) # 4.82 km/h is the average walking speed for people < 30 years old
+
                     sum_diffs += time_diff
         
         # Add gap time to the schedule
         schedule.gap_time = sum_diffs
+        schedule.walk_time = walk_time
         sections_by_day = {}
     
     return schedules
+
+def haversine(coord1: object, coord2: object):
+    '''
+    Calculate distance using the Haversine Formula
+    '''
+    import math
+
+    # Coordinates in decimal degrees (e.g. 2.89078, 12.79797)
+    lon1, lat1 = coord1
+    lon2, lat2 = coord2
+
+    R = 6371000  # radius of Earth in meters
+    phi_1 = math.radians(lat1)
+    phi_2 = math.radians(lat2)
+
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi_1) * math.cos(phi_2) * math.sin(delta_lambda / 2.0) ** 2
+    
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    meters = R * c  # output distance in meters
+    # km = meters / 1000.0  # output distance in kilometers
+     # km = round(km, 3)
+    
+    return round(meters, 3)
+
+def walking_time(distance_meters, average_speed_kph):
+    # Convert distance from meters to kilometers
+    distance_km = distance_meters / 1000
+    
+    # Calculate time in hours
+    time_hours = distance_km / average_speed_kph
+    
+    # Convert time from hours to minutes
+    time_minutes = time_hours * 60
+    
+    return round(time_minutes, 1)
                     
 def get_top_10_schedules(schedules):
     # Sort the list of Schedule objects based on gap_time in ascending order
@@ -212,8 +286,8 @@ def get_top_10_schedules(schedules):
     # Sort the sorted_schedules based on the length of sections in descending order
     # sorted_schedules = sorted(sorted_schedules, key=lambda x: len(x.sections), reverse=True)
 
-    # # Sort the sorted_schedules based on the smallest number of days in the sections list in ascending order
-    # sorted_schedules = sorted(sorted_schedules, key=lambda x: min(len(course.days) for course in x.sections))
+    # Sort the sorted_schedules based on the length of unique days in sections in ascending order
+    sorted_schedules = sorted(sorted_schedules, key=lambda x: len(set(day for course in x.sections for day in course.days)))
 
     # Return the top 10 schedules
     return sorted_schedules[:10]
@@ -285,7 +359,7 @@ class Course:
             'delivery_method': self.delivery_method
         }
 
-def grab_sections_with_selenium():
+def grab_sections_with_selenium(selected_classes):
 
     from selenium import webdriver
     from selenium.webdriver.common.by import By
@@ -346,66 +420,75 @@ def grab_sections_with_selenium():
         print("Button not found or does not exist on the page.")
 
     # Click on the "Add or Drop Classes" button
-    link_element = driver.find_element(By.ID, "pg1_V_lnkAddDrop")
+    link_element = driver.find_element(By.ID, "pg1_V_lblAdvancedSearch")
     link_element.click()
 
     # Put a "." in the Course Title search box and press "Enter
     # This will return all courses
-    input_element = driver.find_element(By.ID, "pg0_V_tabSearch_txtTitleRestrictor")
-    input_element.send_keys(" ")
-    input_element.send_keys(Keys.ENTER)
+    # TODO: Test this loop
 
-    # TODO: Click on the "Show All" link to display all courses
-    # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
-    # show_all.click()
-
-    # Wait until the table with id "tableCourses" is visible and all its rows are present
-    wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
-
-    # TODO: Click on the "Show All" link to display all courses
-    # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
-    # show_all.click()
-
-    # Wait until the table with id "tableCourses" is visible and all its rows are present
-    wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
-
-    # Now find all table rows in the tbody
-    rows = driver.find_elements(By.CSS_SELECTOR, "#tableCourses tbody tr")
-
-    # List to hold Course objects
     courses = []
-    course_codes = []
 
-    # Iterate through each row and extract data
-    for row in rows:    
-        
-        cells = row.find_elements(By.CSS_SELECTOR, "td")
+    for selected_class in selected_classes:
 
-        if cells:
-            section_name = str(cells[1].text.replace(" ", ""))
-            course = str(section_name.split("-")[0])          
-            course_section = str(section_name.split("-")[1])
-            title = str(cells[2].text)
-            instructor = str(cells[4].text)
-            seats_open = [int(num.strip()) for num in str(cells[5].text).split('∕')]
-            status = str(cells[6].text)
-            class_type = cells[8].text
-            delivery_method = cells[9].text
-            schedules = get_schedules_text(cells[7].get_attribute('innerHTML'))
+        input_element = driver.find_element(By.ID, "pg0_V_txtCourseRestrictor")
+        input_element.clear()
+        input_element.send_keys(f"{selected_class}")
+        input_element.send_keys(Keys.ENTER)
 
-            for schedule in schedules:
-                room = schedule['room']
-                days = schedule['days']
-                times = _get_standard_time(schedule['times'])
-                start_time = times[0]
-                end_time = times[1]
-                    
-                # Create Course object and append to list
-                course_obj = Course(section_name, course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method)
-                courses.append(course_obj)
+        # TODO: Click on the "Show All" link to display all courses
+        # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
+        # show_all.click()
 
-    # # Specify the file path where you want to save the list
-    with open("course_list.pkl", "wb") as f:
+        # Wait until the table with id "tableCourses" is visible and all its rows are present
+        wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
+
+        # TODO: Click on the "Show All" link to display all courses
+        # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
+        # show_all.click()
+
+        # Wait until the table with id "tableCourses" is visible and all its rows are present
+        # wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
+
+        # Now find all table rows in the tbody
+        rows = driver.find_elements(By.CSS_SELECTOR, "#tableCourses tbody tr")
+
+
+        # Iterate through each row and extract data
+        for row in rows:    
+            
+            cells = row.find_elements(By.CSS_SELECTOR, "td")
+
+            if cells:
+                section_name = str(cells[1].text.replace(" ", ""))
+                course = str(section_name.split("-")[0])          
+                course_section = str(section_name.split("-")[1])
+                title = str(cells[2].text)
+                instructor = str(cells[4].text)
+                seats_open = [int(num.strip()) for num in str(cells[5].text).split('∕')]
+                status = str(cells[6].text)
+                class_type = cells[8].text
+                delivery_method = cells[9].text
+                schedules = get_schedules_text(cells[7].get_attribute('innerHTML'))
+
+                for schedule in schedules:
+                    room = schedule['room']
+                    days = schedule['days']
+                    times = _get_standard_time(schedule['times'])
+                    start_time = times[0]
+                    end_time = times[1]
+                        
+                    # Create Course object and append to list
+                    course_obj = Course(section_name, course, course_section, title, instructor, seats_open, status, start_time, end_time, days, room, class_type, delivery_method)
+                    courses.append(course_obj)
+
+        # Click on the "Search Again" button
+        search_again = driver.find_element(By.ID, "pg0_V_glbSearchAgain")
+        search_again.click()
+
+
+    # Specify the file path where you want to save the list
+    with open("course_list_2.pkl", "wb") as f:
         pickle.dump(courses, f)
 
     return courses
