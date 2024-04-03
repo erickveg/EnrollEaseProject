@@ -285,6 +285,7 @@ def get_top_10_schedules(schedules):
 
     # Sort the sorted_schedules based on the length of sections in descending order
     # sorted_schedules = sorted(sorted_schedules, key=lambda x: len(x.sections), reverse=True)
+    # TODO: Prioritize non-online classes.
 
     # Sort the sorted_schedules based on the length of unique days in sections in ascending order
     sorted_schedules = sorted(sorted_schedules, key=lambda x: len(set(day for course in x.sections for day in course.days)))
@@ -363,6 +364,8 @@ def grab_sections_with_selenium(selected_classes):
 
     from selenium import webdriver
     from selenium.webdriver.common.by import By
+    from selenium.webdriver.chrome.service import Service
+    from webdriver_manager.chrome import ChromeDriverManager
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
     from bs4 import BeautifulSoup
@@ -394,8 +397,14 @@ def grab_sections_with_selenium(selected_classes):
 
         return schedules_list
 
+
+    # chrome_options = webdriver.ChromeOptions()
+    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--no-sandbox")
+    # chrome_options.add_argument("--disable-dev-shm-usage")
+
     # Start the WebDriver and load the page
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
     wait = WebDriverWait(driver, 240) # 4 minutes
     driver.maximize_window()
     driver.get("https://student.byui.edu/ICS/Academics/")
