@@ -281,14 +281,27 @@ def walking_time(distance_meters, average_speed_kph):
                     
 def get_top_10_schedules(schedules):
     # Sort the list of Schedule objects based on gap_time in ascending order
-    sorted_schedules = sorted(schedules, key=lambda x: x.gap_time)
+    # sorted_schedules = sorted(schedules, key=lambda x: x.gap_time)
 
     # Sort the sorted_schedules based on the length of sections in descending order
     # sorted_schedules = sorted(sorted_schedules, key=lambda x: len(x.sections), reverse=True)
     # TODO: Prioritize non-online classes.
 
     # Sort the sorted_schedules based on the length of unique days in sections in ascending order
-    sorted_schedules = sorted(sorted_schedules, key=lambda x: len(set(day for course in x.sections for day in course.days)))
+    sorted_schedules = sorted(schedules, key=lambda x: len(set(day for course in x.sections for day in course.days)))
+
+    # Define a custom sorting key function
+    # Define a custom sorting key function
+    def custom_sort_key(schedule):
+        # Non-online courses have higher priority, so they are sorted first
+        non_online_courses = [course for course in schedule.sections if "Online" not in course.room]
+        num_non_online_courses = len(non_online_courses)
+
+        # Return a tuple containing the gap time and the number of non-online courses
+        return (schedule.gap_time, -num_non_online_courses)
+
+    # Sort the sorted_schedules using the custom sorting key function
+    sorted_schedules = sorted(sorted_schedules, key=custom_sort_key)
 
     # Return the top 10 schedules
     return sorted_schedules[:10]
@@ -404,7 +417,7 @@ def grab_sections_with_selenium(selected_classes):
     # chrome_options.add_argument("--disable-dev-shm-usage")
 
     # Start the WebDriver and load the page
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 240) # 4 minutes
     driver.maximize_window()
     driver.get("https://student.byui.edu/ICS/Academics/")
@@ -432,10 +445,6 @@ def grab_sections_with_selenium(selected_classes):
     link_element = driver.find_element(By.ID, "pg1_V_lblAdvancedSearch")
     link_element.click()
 
-    # Put a "." in the Course Title search box and press "Enter
-    # This will return all courses
-    # TODO: Test this loop
-
     courses = []
 
     for selected_class in selected_classes:
@@ -445,19 +454,8 @@ def grab_sections_with_selenium(selected_classes):
         input_element.send_keys(f"{selected_class}")
         input_element.send_keys(Keys.ENTER)
 
-        # TODO: Click on the "Show All" link to display all courses
-        # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
-        # show_all.click()
-
         # Wait until the table with id "tableCourses" is visible and all its rows are present
         wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
-
-        # TODO: Click on the "Show All" link to display all courses
-        # show_all = wait.until(EC.visibility_of_element_located((By.ID, "pg0_V_lnkShowAll")))
-        # show_all.click()
-
-        # Wait until the table with id "tableCourses" is visible and all its rows are present
-        # wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "#tableCourses tbody tr")))
 
         # Now find all table rows in the tbody
         rows = driver.find_elements(By.CSS_SELECTOR, "#tableCourses tbody tr")
@@ -496,9 +494,9 @@ def grab_sections_with_selenium(selected_classes):
         search_again.click()
 
 
-    # Specify the file path where you want to save the list
-    with open("course_list_2.pkl", "wb") as f:
-        pickle.dump(courses, f)
+    # # Specify the file path where you want to save the list
+    # with open("course_list_2.pkl", "wb") as f:
+    #     pickle.dump(courses, f)
 
     return courses
                 

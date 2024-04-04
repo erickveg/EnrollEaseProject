@@ -51,6 +51,7 @@ def generate_schedules(request):
         return JsonResponse({'success': True, 'schedules': schedule_dicts})
             # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:
+        print(e)
         return JsonResponse({'success': False, 'error_message': str(e)})
     
 @require_POST

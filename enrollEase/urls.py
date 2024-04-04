@@ -20,8 +20,8 @@ from schedules import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("pages.urls")),
-    path("schedules/", include("schedules.urls")),
+    # path("", include("pages.urls")),
+    path("", include("schedules.urls")),
     path('generate_schedules/', views.generate_schedules, name='generate_schedules'),
     path('update_scheduler/', views.update_scheduler, name='update_scheduler'),
 ]
