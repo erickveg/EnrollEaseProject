@@ -1,1 +1,1 @@
-web: gunicorn enrollease.wsgi
+web: gunicorn enrollEase.wsgi
