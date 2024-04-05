@@ -38,11 +38,13 @@ def generate_schedules(request):
 
         # Get the 'courses' list from the data
         selected_courses = data.get('courses')
+        username = data.get('username')
+        password = data.get('password')
 
         # with open("course_list_2.pkl", "rb") as f:
         #     available_sections = pickle.load(f)
 
-        available_sections = grab_sections_with_selenium(selected_courses)
+        available_sections = grab_sections_with_selenium(selected_courses, username, password)
         
         # Your logic to generate schedules goes here
         schedules = generate_course_list(available_sections, selected_courses)

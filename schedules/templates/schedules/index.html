@@ -25,13 +25,15 @@
 	<body>
 	<section class="ftco-section">
 		<div class="container">
+			<h3 class="heading-section">Select your classes:</h3>
 			<div class="row justify-content-center">
-				<div class="col-md-7 text-center mb-5">
-					<h2 class="heading-section">Select your classes:</h2>
+				
+				<div class="col-md-7  mb-4">
+					
 				</div>
 			</div>
 			<div class="row justify-content-center">
-				<div class="col-lg-4 d-flex justify-content-center align-items-center">
+				<div class="col-lg-4 d-flex justify-content-center align-items-top">
 					<select class="js-select2" multiple="multiple">
 						<option value="ACCTG100" data-badge="">ACCTG 100</option>
 						<option value="ACCTG180" data-badge="">ACCTG 180</option>
@@ -45,8 +47,21 @@
 					</select>
 				</div>
 			</div>
+			<div style="margin-top: 290px;">
+				<h3 class="heading-section">BYU-I Credentials</h3>
+				<div class="form-group">
+					<label for="username">Username:</label>
+					<input type="text" class="form-control" id="username" placeholder="Enter username">
+				</div>
+				<div class="form-group">
+					<label for="password">Password:</label>
+					<input type="password" class="form-control" id="password" placeholder="Enter password">
+				</div>
+			</div>
 		</div>
 	</section>
+
+
 
 	<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg fixed-button">Generate Schedules</button>
 	
@@ -64,6 +79,8 @@
 		document.getElementById('generateScheduleButton').addEventListener('click', function() {
 			// Get the selected courses from the select element
 			var selectedCourses = Array.from(document.querySelectorAll('.js-select2 option:checked')).map(option => option.value);
+			var username = document.getElementById('username').value;
+			var password = document.getElementById('password').value;
 
 			// Get the CSRF token from the cookie (use the Django CSRF_COOKIE_NAME)
 			var csrftoken = Cookies.get('csrftoken');
@@ -75,7 +92,7 @@
 					'Content-Type': 'application/json',
 					'X-CSRFToken': csrftoken  // Include the CSRF token in the headers
 				},
-				body: JSON.stringify({ courses: selectedCourses }),
+				body: JSON.stringify({ courses: selectedCourses, username: username, password: password}),
 			})
 			.then(response => response.json())
 			.then(data => {

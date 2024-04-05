@@ -3,6 +3,7 @@ import pickle
 from .models import Section, Course, School
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+import os
 
 # def create_and_save_objects(courses_data):
 #     try:
@@ -372,8 +373,37 @@ class Course:
             'class_type': self.class_type,
             'delivery_method': self.delivery_method
         }
+    
+def get_schedules_text(html_content):
+    from bs4 import BeautifulSoup
 
-def grab_sections_with_selenium(selected_classes):
+    soup = BeautifulSoup(html_content, "html.parser")
+    # Find all <li> elements within the <ul> with class "schedules"
+    schedule_elements = soup.select('ul.schedules li')
+    schedules_list = []
+    
+    for schedule in schedule_elements:
+        days = []
+        times = ""
+        room = schedule.find_all("div")[-1].get_text(strip=True)
+
+        if room in ["Online Class", "Arranged", "Blended (part-online)", "Flexible Location"]:
+            days = ["X"]
+            times = "00:00-00:00AM"
+        else:
+            days = [d for d in schedule.get_text().split()[0] if d.isalpha()]
+            times = schedule.get_text().split()[1]
+
+
+        schedules_list.append({
+            'days': days,
+            'times': times,
+            'room': room
+        })
+
+    return schedules_list
+
+def grab_sections_with_selenium(selected_classes, username, password):
 
     from selenium import webdriver
     from selenium.webdriver.common.by import By
@@ -381,43 +411,18 @@ def grab_sections_with_selenium(selected_classes):
     from webdriver_manager.chrome import ChromeDriverManager
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
-    from bs4 import BeautifulSoup
 
-    def get_schedules_text(html_content):
-        soup = BeautifulSoup(html_content, "html.parser")
-        # Find all <li> elements within the <ul> with class "schedules"
-        schedule_elements = soup.select('ul.schedules li')
-        schedules_list = []
-        
-        for schedule in schedule_elements:
-            days = []
-            times = ""
-            room = schedule.find_all("div")[-1].get_text(strip=True)
-
-            if room in ["Online Class", "Arranged", "Blended (part-online)", "Flexible Location"]:
-                days = ["X"]
-                times = "00:00-00:00AM"
-            else:
-                days = [d for d in schedule.get_text().split()[0] if d.isalpha()]
-                times = schedule.get_text().split()[1]
-
-
-            schedules_list.append({
-                'days': days,
-                'times': times,
-                'room': room
-            })
-
-        return schedules_list
-
-
-    # chrome_options = webdriver.ChromeOptions()
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
     # chrome_options.add_argument("--headless")
     # chrome_options.add_argument("--no-sandbox")
-    # chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
     # Start the WebDriver and load the page
-    driver = webdriver.Chrome()
+    # path_to_chromedriver = "C:/Users/erick/Downloads/chromedriver-win64/chromedriver-win64"
+    service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    # driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 240) # 4 minutes
     driver.maximize_window()
     driver.get("https://student.byui.edu/ICS/Academics/")
@@ -425,6 +430,20 @@ def grab_sections_with_selenium(selected_classes):
     # Click on the "Login" button
     login_button = driver.find_element(By.ID, "jics-login-redirect-simple-button")
     login_button.click()    
+
+    username_input = driver.find_element(By.ID, "username")
+    username_input.send_keys(username)
+
+    password_input = driver.find_element(By.ID, "password")
+    password_input.send_keys(password)
+
+    submit_button = driver.find_element(By.NAME, "submit")
+    submit_button.click()
+
+    # TODO: prompt to accept duo when id="auth-view-wrapper"
+
+    dont_trust = wait.until(EC.visibility_of_element_located((By.ID, "dont-trust-browser-button")))
+    dont_trust.click()
 
     # Wait until the byui number is visible
     element = wait.until(EC.visibility_of_element_located((By.ID, "siteNavBar_welcomeBackBarLoggedIn_byuiINumber")))
