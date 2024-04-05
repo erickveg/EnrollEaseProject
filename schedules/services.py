@@ -420,7 +420,9 @@ def grab_sections_with_selenium(selected_classes, username, password):
 
     # Start the WebDriver and load the page
     # path_to_chromedriver = "C:/Users/erick/Downloads/chromedriver-win64/chromedriver-win64"
+    print(f"CHROMEDRIVER_PATH: {os.environ.get("CHROMEDRIVER_PATH")}")
     service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
+    
     driver = webdriver.Chrome(service=service, options=chrome_options)
     # driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 240) # 4 minutes
