@@ -1,6 +1,7 @@
 import datetime
 import pickle
-from .models import Section, Course, School
+import random
+# from .models import Section, Course, School
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
@@ -74,20 +75,20 @@ class Schedule:
         }
 
 def generate_course_list(available_sections, selected_courses): 
-    desired_classes = selected_courses
+    selected_courses = [course.upper().replace(" ", "") for course in selected_courses]
 
     filtered_available_sections = []
 
     for section in available_sections:
-        if section.course in desired_classes:
+        if section.course in selected_courses:
             filtered_available_sections.append(section)
 
     sections_combinations = generate_sections_combinations(filtered_available_sections)    
-    viable_combinations = select_viable_combinations(sections_combinations, desired_classes)
+    viable_combinations = select_viable_combinations(sections_combinations, selected_courses)
     schedules = generate_schedule_objects(viable_combinations)
     schedules = add_gap_time(schedules)
 
-    return get_top_10_schedules(schedules)
+    return get_top_10_schedules(schedules), "579376121"
 
 def generate_schedule_objects(viable_combinations):
     schedules = []
@@ -294,17 +295,22 @@ def get_top_10_schedules(schedules):
     # Define a custom sorting key function
     def custom_sort_key(schedule):
         # Non-online courses have higher priority, so they are sorted first
-        non_online_courses = [course for course in schedule.sections if "Online" not in course.room]
-        num_non_online_courses = len(non_online_courses)
+        # non_online_courses = [course for course in schedule.sections if "Online" not in course.room]
+        # num_non_online_courses = len(non_online_courses)
+        day_class_type_courses = [course for course in schedule.sections if course.class_type == "DAY"]
+        num_day_class_type_courses = len(day_class_type_courses)
 
         # Return a tuple containing the gap time and the number of non-online courses
-        return (schedule.gap_time, -num_non_online_courses)
+        return (-num_day_class_type_courses, schedule.gap_time )
 
     # Sort the sorted_schedules using the custom sorting key function
     sorted_schedules = sorted(sorted_schedules, key=custom_sort_key)
 
-    # Return the top 10 schedules
-    return sorted_schedules[:10]
+    # Return the top 10 schedules, if there are more than 10 schedules available return the top 10 and 10 random schedules
+    if len(sorted_schedules) <= 20:
+        return sorted_schedules[:20]
+    else:
+        return sorted_schedules[:10] + random.sample(sorted_schedules[10:], 10)
 
 def _get_standard_time(time_str : str):
     times = time_str.split("-")
@@ -430,8 +436,7 @@ def grab_sections_with_selenium(selected_classes):
     element = wait.until(EC.visibility_of_element_located((By.ID, "siteNavBar_welcomeBackBarLoggedIn_byuiINumber")))
 
     # Get the text content of the element
-    value = element.text
-    print(value)
+    user_id = element.text
 
     # Click button on pop-up window
     try:
@@ -494,10 +499,10 @@ def grab_sections_with_selenium(selected_classes):
         search_again.click()
 
 
-    # # Specify the file path where you want to save the list
-    # with open("course_list_2.pkl", "wb") as f:
+    # Specify the file path where you want to save the list
+    # with open("md_sections_pack.pkl", "wb") as f:
     #     pickle.dump(courses, f)
 
-    return courses
+    return courses, user_id
                 
     

@@ -45,10 +45,13 @@
 					</select>
 				</div>
 			</div>
+			<div class="row justify-content-center">
+				<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg " style="margin-top: 600px;">Generate Schedules</button>
+			</div>
 		</div>
 	</section>
 
-	<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg fixed-button">Generate Schedules</button>
+	<!-- <button id="generateScheduleButton" type="button" class="btn btn-success btn-lg fixed-button">Generate Schedules</button> -->
 	
 
 	<script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
@@ -80,14 +83,14 @@
 			.then(response => response.json())
 			.then(data => {
 				// Update the scheduler with the new schedules
-				updateScheduler(data.schedules);
+				updateScheduler(data.schedules, data.user_id);
 			})
 			.catch(error => {
 				console.error('Error:', error);
 			});
 		});
 		
-		function updateScheduler(schedules) {
+		function updateScheduler(schedules, user_id) {
 			// $('#scheduler').empty();
 			var csrftoken = Cookies.get('csrftoken');
 
@@ -97,7 +100,7 @@
 					'Content-Type': 'application/json',
 					'X-CSRFToken': csrftoken  // Include the CSRF token in the headers
 				},
-				body: JSON.stringify({ schedules: schedules }),
+				body: JSON.stringify({ schedules: schedules,  user_id: user_id}),
 			})
 			.then(response => response.text()).then(data => {
 				// Replace the scheduler part of the page with the new HTML

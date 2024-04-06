@@ -208,6 +208,9 @@
               <p id="walk-time"></p>
               <ul id="section-info-list" class="list-group">
               </ul>
+              <div class="row justify-content-center mt-4">
+                <button class="btn btn-primary" onclick="saveSchedule()">I love this schedule!</button>
+              </div>
           </div>
       </div>
   </div>
@@ -216,7 +219,8 @@
   <script>
     
     var courseList = {{ schedules|safe }};  
-    console.log(courseList);
+    var user_id = {{ user_id|safe }};
+    console.log(user_id);
 
     let currentIndex = 0;
 
@@ -252,6 +256,38 @@
       // Update the calendar with the new course_list
       addCoursesToTable();
     }
+
+    function saveSchedule() {
+    // Get the user ID and the schedule
+    var userId = user_id;
+    var schedule = courseList[currentIndex];
+
+    // Create the data to send
+    var data = {
+        userId: userId,
+        schedule: schedule
+    };
+
+    // Make a POST request to the server-side endpoint
+    fetch('/save-schedule', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Schedule saved successfully!');
+        } else {
+            alert('Failed to save schedule.');
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
 
 
     function clearCalendar() {

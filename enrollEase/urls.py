@@ -22,6 +22,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # path("", include("pages.urls")),
     path("", include("schedules.urls")),
+    # path("schedules/", views.my_schedule, name="generate_my_schedule"),
     path('generate_schedules/', views.generate_schedules, name='generate_schedules'),
     path('update_scheduler/', views.update_scheduler, name='update_scheduler'),
 ]

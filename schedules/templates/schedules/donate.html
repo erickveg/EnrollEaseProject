@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load bootstrap5 static %}
+
+{% block title %}Donate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="text-center mb-4">Support Our Project</h1>
+            <p class="lead text-center">EnrollEase is a community-driven project, and we rely on the generous support of users like you to continue our work. Your contribution, no matter how small, will help us maintain our servers, develop new features, and provide support to our users.</p>
+            <p class="lead text-center">If you find EnrollEase useful and would like to see it grow, please consider making a donation. Every little bit helps!</p>
+            <div class="text-center mt-5">
+                <h2>Donate with Venmo</h2>
+                <p>Scan the QR code below to donate with Venmo.</p>
+                <img src="{% static 'schedules/vega_venmo.png' %}" alt="Venmo QR Code" class="img-fluid rounded" style="height:300px;" >
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

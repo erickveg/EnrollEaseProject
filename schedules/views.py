@@ -2,11 +2,12 @@
 
 import pickle
 from django.shortcuts import render
-from schedules.models import Section
+from schedules.models import Section, Schedule
 from .services import generate_course_list, grab_sections_with_selenium
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.contrib.auth.models import User
 import json
 
 available_sections = []
@@ -25,9 +26,14 @@ def schedule_detail(request, pk):
     }
     return render(request, "schedules/schedule_detail.html", context)
 
-def generate_course_view(request):
-    
+def generate_course_view(request):    
     return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
+
+def my_schedule(request):
+    return render(request, 'schedules/my-schedule.html')
+
+def donate(request):
+    return render(request, 'schedules/donate.html')
 
 
 @require_POST
@@ -39,19 +45,23 @@ def generate_schedules(request):
         # Get the 'courses' list from the data
         selected_courses = data.get('courses')
 
-        # with open("course_list_2.pkl", "rb") as f:
-        #     available_sections = pickle.load(f)
+        with open("md_sections_pack.pkl", "rb") as f:
+            available_sections = pickle.load(f)
 
-        available_sections = grab_sections_with_selenium(selected_courses)
+        # available_sections, user_id = grab_sections_with_selenium(selected_courses)
         
-        # Your logic to generate schedules goes here
-        schedules = generate_course_list(available_sections, selected_courses)
-        schedule_dicts = [schedule.to_dict() for schedule in schedules]
+            # Your logic to generate schedules goes here
+            schedules, user_id = generate_course_list(available_sections, selected_courses)
+            schedule_dicts = [schedule.to_dict() for schedule in schedules]
 
-        return JsonResponse({'success': True, 'schedules': schedule_dicts})
+            return JsonResponse({'success': True, 'schedules': schedule_dicts, 'user_id': user_id})
             # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:
+        print()
+        print("////////////////////////////////////")
+        print("Error generating schedules")
         print(e)
+        print()
         return JsonResponse({'success': False, 'error_message': str(e)})
     
 @require_POST
@@ -62,4 +72,39 @@ def update_scheduler(request):
 
     # Get the 'courses' list from the data
     schedules = data.get('schedules')
-    return render(request, 'schedules/scheduler.html', {'schedules': schedules})
+    user_id = data.get('user_id')
+    return render(request, 'schedules/scheduler.html', {'schedules': schedules, 'user_id': user_id})
+
+@require_POST
+def save_schedule(request):
+    data = json.loads(request.body)
+    schedule_data = data.get('schedule')
+    user_id = data.get('user_id')
+
+        # Get the user
+    user = User.objects.get(id=user_id)
+
+    # Create a new schedule for the user
+    schedule = Schedule.objects.create(user=user, walk_time=schedule_data.get('walk_time'), gap_time=schedule_data.get('gap_time'))
+
+    # Add the sections to the schedule
+    for section_data in schedule_data.get('sections'):
+        # Create a new section
+        section = Section.objects.create(
+            section_name=section_data.get('section_name'),
+            course=section_data.get('course'),
+            course_section=section_data.get('course_section'),
+            title=section_data.get('title'),
+            instructor=section_data.get('instructor'),
+            seats_open=','.join(section_data.get('days')),
+            status=section_data.get('status'),
+            start_time=section_data.get('start_time'),
+            end_time=section_data.get('end_time'),
+            days=','.join(section_data.get('days')),
+            room=section_data.get('room'),
+            class_type=section_data.get('class_type'),
+            delivery_method=section_data.get('delivery_method')
+        )
+        schedule.sections.add(section)
+
+    return JsonResponse({'success': True})
