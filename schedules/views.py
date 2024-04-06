@@ -1,12 +1,13 @@
 # schedules/views.py
 
 import pickle
+import traceback
 from django.shortcuts import render
-from schedules.models import Section, Schedule
-from .services import generate_course_list, grab_sections_with_selenium
+from schedules.models import SectionModel, ScheduleModel
+from .services import generate_course_list, grab_sections_with_selenium, Course, Schedule
 
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.models import User
 import json
 
@@ -35,6 +36,9 @@ def my_schedule(request):
 def donate(request):
     return render(request, 'schedules/donate.html')
 
+def profile(request):
+    return render(request, 'schedules/profile.html')
+
 
 @require_POST
 def generate_schedules(request):    
@@ -45,22 +49,23 @@ def generate_schedules(request):
         # Get the 'courses' list from the data
         selected_courses = data.get('courses')
 
-        with open("md_sections_pack.pkl", "rb") as f:
-            available_sections = pickle.load(f)
+        # with open("md_sections_pack.pkl", "rb") as f:
+        #     available_sections = pickle.load(f)
 
-        # available_sections, user_id = grab_sections_with_selenium(selected_courses)
+        available_sections = grab_sections_with_selenium(selected_courses)
         
-            # Your logic to generate schedules goes here
-            schedules, user_id = generate_course_list(available_sections, selected_courses)
-            schedule_dicts = [schedule.to_dict() for schedule in schedules]
+        # Your logic to generate schedules goes here
+        schedules, user_id = generate_course_list(available_sections, selected_courses)
+        schedule_dicts = [schedule.to_dict() for schedule in schedules]
 
-            return JsonResponse({'success': True, 'schedules': schedule_dicts, 'user_id': user_id})
+        return JsonResponse({'success': True, 'schedules': schedule_dicts, 'user_id': user_id})
             # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:
         print()
         print("////////////////////////////////////")
         print("Error generating schedules")
         print(e)
+        print(traceback.format_exc())
         print()
         return JsonResponse({'success': False, 'error_message': str(e)})
     
@@ -79,24 +84,25 @@ def update_scheduler(request):
 def save_schedule(request):
     data = json.loads(request.body)
     schedule_data = data.get('schedule')
-    user_id = data.get('user_id')
+    user_id = data.get('userId')
 
-        # Get the user
-    user = User.objects.get(id=user_id)
+        
+     # Get or create the user
+    user, created = User.objects.get_or_create(id=user_id)
 
     # Create a new schedule for the user
-    schedule = Schedule.objects.create(user=user, walk_time=schedule_data.get('walk_time'), gap_time=schedule_data.get('gap_time'))
+    schedule = ScheduleModel.objects.create(user=user, walk_time=schedule_data.get('walk_time'), gap_time=schedule_data.get('gap_time'))
 
     # Add the sections to the schedule
     for section_data in schedule_data.get('sections'):
         # Create a new section
-        section = Section.objects.create(
+        section = SectionModel.objects.create(
             section_name=section_data.get('section_name'),
             course=section_data.get('course'),
             course_section=section_data.get('course_section'),
             title=section_data.get('title'),
             instructor=section_data.get('instructor'),
-            seats_open=','.join(section_data.get('days')),
+            seats_open=','.join(str(num) for num in section_data.get('seats_open')),
             status=section_data.get('status'),
             start_time=section_data.get('start_time'),
             end_time=section_data.get('end_time'),
@@ -108,3 +114,12 @@ def save_schedule(request):
         schedule.sections.add(section)
 
     return JsonResponse({'success': True})
+
+@require_GET
+def get_saved_schedules(request):
+    user_id = request.GET.get('user_id')
+    user = User.objects.get(id=user_id)
+    schedules = ScheduleModel.objects.filter(user=user)
+    schedule_objects = [Schedule.from_model(schedule) for schedule in schedules]
+    schedule_dicts = [schedule.to_dict() for schedule in schedule_objects if len(schedule.sections) > 0]
+    return JsonResponse({'success': True, 'schedules': schedule_dicts})

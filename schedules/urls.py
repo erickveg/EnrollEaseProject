@@ -8,5 +8,6 @@ urlpatterns = [
     # path("<int:pk>/", views.schedule_detail, name="schedule_detail"),
     path("", views.generate_course_view, name="schedule_generator"),
     path("my-schedule/", views.my_schedule, name="my_schedule"),
-    path("donate/", views.donate, name="donate")
+    path("donate/", views.donate, name="donate"),
+    path("profile/", views.profile, name="profile"),
 ]

@@ -4,7 +4,7 @@ from django.db import models
 
 from django.contrib.auth.models import User
 
-class Section(models.Model):
+class SectionModel(models.Model):
     section_name = models.CharField(max_length=200)
     course = models.CharField(max_length=200)
     course_section = models.CharField(max_length=200)
@@ -19,9 +19,9 @@ class Section(models.Model):
     class_type = models.CharField(max_length=200)
     delivery_method = models.CharField(max_length=200)
 
-class Schedule(models.Model):
+class ScheduleModel(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    sections = models.ManyToManyField(Section)
+    sections = models.ManyToManyField(SectionModel)
     walk_time = models.IntegerField(default=0)
     gap_time = models.IntegerField(default=0)
 

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load bootstrap5 static %}
+
+{% block title %}My Schedule{% endblock %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <title>Profile Page</title>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <img src="{% static 'schedules/profile.png' %}" alt="Profile Icon" class="img-fluid rounded-circle mb-4" style="height:100px;">
+                <h1 class="mb-4">User Profile</h1>
+                <p class="lead"><strong>Name:</strong>  Erick Vega</p>
+                <p class="lead"><strong>ID:</strong> 579376121</p>
+                <p class="lead"><strong>Number of Schedules:</strong> 3</p>
+                <p class="lead"><strong>Member Since:</strong> April 2024 </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+{% endblock %}

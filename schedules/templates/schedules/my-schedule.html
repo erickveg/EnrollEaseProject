@@ -4,5 +4,282 @@
 {% block title %}My Schedule{% endblock %}
 
 {% block content %}
-<h1>My Schedule</h1>
+<br>
+<br>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+          <div class="dayPilot"><script>
+              function resetSiblingZIndex(thisElement)
+              {
+              var children = thisElement.parentElement.childNodes;
+              for (var i = 0; i < children.length; i++) 
+              {
+              children[i].style.zIndex = 0;
+              }
+              }
+            
+            </script>
+            {% include './reusable_table.html' %}
+
+        </div>
+    </div>
+    <div class="col-md-4">
+      {% include './reusable_courseinfo.html' %}
+  </div>
+</div>
+</div>
+
+        <script>
+
+    let courseList;
+
+    let currentIndex = 0;
+
+    async function getSavedSchedules(userId) {
+        try {
+            const response = await fetch(`/get_saved_schedules/?user_id=${userId}`);
+            const data = await response.json();
+            return data.schedules;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function fetchAndLogSchedules() {
+    courseList = await getSavedSchedules("579376121");
+    console.log(courseList);
+    addTitle(); // Call addTitle here
+    addCoursesToTable();
+}
+
+function addTitle() {
+  var title = document.getElementById("pageTitle");
+  title.innerHTML = `<center><h2>We found ${courseList.length} schedules for you!</h2></center>`;
+}
+
+    function addTitle() {
+      var title = document.getElementById("pageTitle");
+      title.innerHTML = `<center><h2>You have saved ${courseList.length} schedules!</h2></center>`;
+    }
+
+    function next() {
+      // Clear the calendar
+      clearCalendar();
+      clearOnlineCourses();
+      clearInfoBar();
+      clearScheduleNumber();
+
+      // Increment the currentIndex
+      currentIndex = (currentIndex + 1) % courseList.length;
+
+      // Update the calendar with the new course_list
+      addCoursesToTable();
+    }
+
+    function previous() {
+      // Clear the calendar
+      clearCalendar();
+      clearOnlineCourses();
+      clearInfoBar();
+      clearScheduleNumber();
+
+      // Increment the currentIndex
+      currentIndex = (currentIndex - 1 + courseList.length) % courseList.length;
+
+      // Update the calendar with the new course_list
+      addCoursesToTable();
+    }
+
+    function clearCalendar() {
+      // Clear the entire td column for each day
+      var monday = document.querySelector(".monday-column");
+      var tuesday = document.querySelector(".tuesday-column");
+      var wednesday = document.querySelector(".wednesday-column");
+      var thursday = document.querySelector(".thursday-column");
+      var friday = document.querySelector(".friday-column");
+
+      if (monday) monday.parentNode.removeChild(monday);
+      if (tuesday) tuesday.parentNode.removeChild(tuesday);
+      if (wednesday) wednesday.parentNode.removeChild(wednesday);
+      if (thursday) thursday.parentNode.removeChild(thursday);
+      if (friday) friday.parentNode.removeChild(friday);
+    }
+
+    function clearOnlineCourses() {
+      var onlineCourses = document.getElementById("onlineCourses");
+      onlineCourses.innerHTML = `<h3>Online Courses:</h3>`;
+    }
+
+    function clearInfoBar() {
+      var infobar = document.getElementById("section-info-list");
+      infobar.innerHTML = ``;
+    }
+
+    function clearScheduleNumber() {
+      var scheduleNumber = document.getElementById("schedule-number");
+      scheduleNumber.innerHTML = ``;
+    }
+
+    // Define your color palette mapping
+    const colorPalette = [
+      "122c34",
+      "224870",
+      "2a4494",
+      "4ea5d9",
+      "44cfcb",
+    ];
+
+    function createTableData(course, top, index) {
+      // Get the color from the palette based on the index
+      const sectionColor = colorPalette[index % colorPalette.length];
+
+      var divElement = document.createElement("div");
+      divElement.style.position = "relative";
+      divElement.style.display = "block";
+
+      divElement.innerHTML = `
+            <div class="card"
+              onselectstart="return false;"
+              onclick="resetSiblingZIndex(this); this.style.zIndex=1; event.cancelBubble=true;"
+              style="position: absolute; cursor: pointer; border: 0px; cursor: hand; font-family: Tahoma; font-size: 8pt; white-space: no-wrap; left: 2%; top: ${top}px; width: 95%; height: 60px;">
+  
+              <div class="card-body Gradient" title="${course.title} ${course.start_time} - ${course.end_time}"
+                style="height: 58px; overflow: hidden; background-color: #${sectionColor}; border-radius: 10px; ">
+  
+                <div style="float: left; height: 100%; border-left: 2px solid #A9C638;"></div>
+                <div style="float: left; width: 5px; height: 100%;"></div>
+  
+                <div style="margin-top: -15px;"">
+                  <div class="scheduleItemTitle" style="color: white;">${course.section_name}</div>
+                  <div style="color: white;">${course.start_time} - ${course.end_time} </div>
+                </div>
+  
+              </div>
+            </div>
+          `;
+
+      return divElement;
+    }
+
+    function createOnlineCourseParagraph(course) {
+      var pElement = document.createElement("p");
+      pElement.innerHTML = `${course.section_name} | ${course.title}`;
+      return pElement;
+    }
+
+    function createInfoBarItem(course) {
+      var infoItem = document.createElement("li");
+      infoItem.classList.add("list-group-item"); // Add Bootstrap card classes
+      infoItem.innerHTML = `
+        <h5 class="mb-1">${course.section_name} | ${course.title}</h5>
+        <p class="mb-1">Professor: ${course.instructor}</p>
+        <p class="mb-1">Room: ${course.room}</p>
+    `;
+      return infoItem;
+    }
+
+    // Function to add courses to the table
+    function addCoursesToTable() {
+
+      // Create a mapping of top position from time
+      var topFromTime = {};
+
+      for (var hour = 7; hour <= 17; hour++) {
+        for (var minute = 0; minute < 60; minute += 15) {
+          var time = (hour < 10 ? '0' : '') + hour + (minute === 0 ? '00' : minute);
+          var topValue = -660 + (hour - 7) * 60 + (minute / 15) * 15;
+          topFromTime[time] = topValue;
+        }
+      }
+
+      // Get the table body element
+      var tableBody = document.getElementById("courseTableBody");
+
+      console.log(courseList[currentIndex]);
+      var course_pack = courseList[currentIndex].sections;
+      var gap_time = courseList[currentIndex].gap_time;
+      var walk_time = courseList[currentIndex].walk_time;
+
+      var monday = document.createElement("td");
+      monday.className = "monday-column"; // Add class name
+      monday.width = "20%";
+
+      var tuesday = document.createElement("td");
+      tuesday.className = "tuesday-column"; // Add class name
+      tuesday.width = "20%";
+
+      var wednesday = document.createElement("td");
+      wednesday.className = "wednesday-column"; // Add class name
+      wednesday.width = "20%";
+
+      var thursday = document.createElement("td");
+      thursday.className = "thursday-column"; // Add class name
+      thursday.width = "20%";
+
+      var friday = document.createElement("td");
+      friday.className = "friday-column"; // Add class name
+      friday.width = "20%";
+
+      var onlineCourses = document.getElementById("onlineCourses");
+
+      var sectionInfoList = document.getElementById("section-info-list");
+
+      var gapTime = document.getElementById("gap-time");
+      gapTime.innerHTML = `Gap Time: ${gap_time} minutes`;
+
+      var walkTime = document.getElementById("walk-time");
+      walkTime.innerHTML = `Walk Time: ${walk_time} minutes`;
+
+      var scheduleNumber = document.getElementById("schedule-number");
+      scheduleNumber.innerHTML = `${currentIndex + 1} / ${courseList.length}`;
+
+
+      var row = document.createElement("tr");
+      row.appendChild(monday);
+      row.appendChild(tuesday);
+      row.appendChild(wednesday);
+      row.appendChild(thursday);
+      row.appendChild(friday);
+
+      // Append the row to the table body
+      tableBody.appendChild(row);
+
+      for (var j = 0; j < course_pack.length; j++) {
+
+        var single_course = course_pack[j];
+        // var time = single_course.time.split("-");
+        var start = single_course.start_time;
+        var end = single_course.end_time;
+        // console.log(start);
+
+        if (single_course.days.includes("M")) {
+          monday.appendChild(createTableData(single_course, topFromTime[start], j));
+        }
+        if (single_course.days.includes("T")) {
+          tuesday.appendChild(createTableData(single_course, topFromTime[start], j));
+        }
+        if (single_course.days.includes("W")) {
+          wednesday.appendChild(createTableData(single_course, topFromTime[start], j));
+        }
+        if (single_course.days.includes("R")) {
+          thursday.appendChild(createTableData(single_course, topFromTime[start], j));
+        }
+        if (single_course.days.includes("F")) {
+          friday.appendChild(createTableData(single_course, topFromTime[start], j));
+        }
+        if (single_course.days.includes("X")) {
+          onlineCourses.appendChild(createOnlineCourseParagraph(single_course));
+        }
+
+        sectionInfoList.appendChild(createInfoBarItem(single_course));
+      }
+    }
+
+    
+    fetchAndLogSchedules();
+
+</script>
+
 {% endblock %}
+
