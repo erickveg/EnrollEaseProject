@@ -31,7 +31,7 @@
 				</div>
 			</div>
 			<div class="row justify-content-center">
-				<div class="col-lg-4 d-flex justify-content-center align-items-center">
+				<div class="col-lg-4 d-flex justify-content-center align-items-center" style="margin-bottom: 400px;">
 					<select class="js-select2" multiple="multiple">
 						<option value="ACCTG100" data-badge="">ACCTG 100</option>
 						<option value="ACCTG180" data-badge="">ACCTG 180</option>
@@ -50,8 +50,49 @@
 					</select>
 				</div>
 			</div>
-			<div class="row justify-content-center">
-				<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg " style="margin-top: 600px;">Generate Schedules</button>
+				<h2 class="heading-section">User Preferences:</h2>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="reduceGapTime">
+						<label class="form-check-label" for="reduceGapTime">
+							Reduce GAP TIME between classes
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="reduceOnlineClasses">
+						<label class="form-check-label" for="reduceOnlineClasses">
+							Reduce ONLINE CLASSES
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="reduceNumberOfDays">
+						<label class="form-check-label" for="reduceNumberOfDays">
+							Reduce NUMBER OF DAYS WITH CLASSES
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" value="" id="reduceWalkTime">
+						<label class="form-check-label" for="reduceWalkTime">
+							Reduce WALK TIME
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<button id="generateScheduleButton" type="button" class="btn btn-success btn-lg" style="margin-top: 40px;" >Generate Schedules</button>
 			</div>
 		</div>
 	</section>
@@ -72,6 +113,12 @@
 		document.getElementById('generateScheduleButton').addEventListener('click', function() {
 			// Get the selected courses from the select element
 			var selectedCourses = Array.from(document.querySelectorAll('.js-select2 option:checked')).map(option => option.value);
+			var userPreferences = {
+				reduceGapTime: document.getElementById('reduceGapTime').checked,
+				reduceOnlineClasses: document.getElementById('reduceOnlineClasses').checked,
+				reduceNumberOfDays: document.getElementById('reduceNumberOfDays').checked,
+				reduceWalkTime: document.getElementById('reduceWalkTime').checked,
+			};
 
 			// Get the CSRF token from the cookie (use the Django CSRF_COOKIE_NAME)
 			var csrftoken = Cookies.get('csrftoken');
@@ -83,7 +130,7 @@
 					'Content-Type': 'application/json',
 					'X-CSRFToken': csrftoken  // Include the CSRF token in the headers
 				},
-				body: JSON.stringify({ courses: selectedCourses }),
+				body: JSON.stringify({ courses: selectedCourses, userPreferences: userPreferences}),
 			})
 			.then(response => response.json())
 			.then(data => {
@@ -144,6 +191,16 @@
 		function nodeScriptIs(node) {
 				return node.tagName === 'SCRIPT';
 		}
+
+		var savedPreferences = {{ preferences|safe }};  
+		console.log(savedPreferences);
+		if (savedPreferences) {
+			document.getElementById('reduceGapTime').checked = savedPreferences.reduceGapTime === 'true' ? true : false;
+			document.getElementById('reduceOnlineClasses').checked = savedPreferences.reduceOnlineClasses === 'true' ? true : false;
+			document.getElementById('reduceNumberOfDays').checked = savedPreferences.reduceNumberOfDays === 'true' ? true : false;
+			document.getElementById('reduceWalkTime').checked = savedPreferences.reduceWalkTime === 'true' ? true : false;
+		}
+
 	</script>
 
 

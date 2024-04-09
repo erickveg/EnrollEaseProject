@@ -3,7 +3,7 @@
 import pickle
 import traceback
 from django.shortcuts import render
-from schedules.models import SectionModel, ScheduleModel
+from schedules.models import PreferenceModel, SectionModel, ScheduleModel
 from .services import generate_course_list, grab_sections_with_selenium, Course, Schedule
 
 from django.http import JsonResponse
@@ -13,22 +13,24 @@ import json
 
 available_sections = []
 
-def schedule_index(request):
-    schedules = Section.objects.all()
-    context = {
-        "schedules": schedules
-    }
-    return render(request, "schedules/schedule_index.html", context)
+# def schedule_index(request):
+#     schedules = Section.objects.all()
+#     context = {
+#         "schedules": schedules
+#     }
+#     return render(request, "schedules/schedule_index.html", context)
 
-def schedule_detail(request, pk):
-    schedule = Section.objects.get(pk=pk)
-    context = {
-        "schedule": schedule
-    }
-    return render(request, "schedules/schedule_detail.html", context)
+# def schedule_detail(request, pk):
+#     schedule = Section.objects.get(pk=pk)
+#     context = {
+#         "schedule": schedule
+#     }
+#     return render(request, "schedules/schedule_detail.html", context)
 
-def generate_course_view(request):    
-    return render(request, 'schedules/optimal_schedule.html', {'schedules': []})
+def generate_course_view(request):
+    preferences = get_user_preferences("579376121")
+    print(f"generate_course_view: {preferences}")
+    return render(request, 'schedules/optimal_schedule.html', {'schedules': [], 'preferences': preferences})
 
 def my_schedule(request):
     return render(request, 'schedules/my-schedule.html')
@@ -48,17 +50,20 @@ def generate_schedules(request):
 
         # Get the 'courses' list from the data
         selected_courses = data.get('courses')
+        user_preferences = data.get('userPreferences')
 
-        # with open("md_sections_pack.pkl", "rb") as f:
-        #     available_sections = pickle.load(f)
+        with open("md_sections_pack.pkl", "rb") as f:
+            available_sections = pickle.load(f)
 
-        available_sections = grab_sections_with_selenium(selected_courses)
+        # available_sections = grab_sections_with_selenium(selected_courses)
         
         # Your logic to generate schedules goes here
-        schedules, user_id = generate_course_list(available_sections, selected_courses)
-        schedule_dicts = [schedule.to_dict() for schedule in schedules]
+            schedules, user_id = generate_course_list(available_sections, selected_courses, user_preferences)
+            schedule_dicts = [schedule.to_dict() for schedule in schedules]
 
-        return JsonResponse({'success': True, 'schedules': schedule_dicts, 'user_id': user_id})
+            save_user_preferences(user_id, user_preferences)
+
+            return JsonResponse({'success': True, 'schedules': schedule_dicts, 'user_id': user_id})
             # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:
         print()
@@ -123,3 +128,25 @@ def get_saved_schedules(request):
     schedule_objects = [Schedule.from_model(schedule) for schedule in schedules]
     schedule_dicts = [schedule.to_dict() for schedule in schedule_objects if len(schedule.sections) > 0]
     return JsonResponse({'success': True, 'schedules': schedule_dicts})
+
+def save_user_preferences(user_id, user_preferences):
+    try:
+        user, created = User.objects.get_or_create(id=user_id)
+        preferences = json.dumps(user_preferences)
+        user_preferences, created = PreferenceModel.objects.update_or_create(user=user)
+        user_preferences.preferences = preferences
+        user_preferences.save()
+    except Exception as e:
+        print("Error saving user preferences")
+
+def get_user_preferences(user_id):
+    user = User.objects.get(id=user_id)
+    try:
+        preferences = PreferenceModel.objects.get(user=user)
+        user_preferences = json.loads(preferences.preferences)
+        for key, value in user_preferences.items():
+            boolean = str(value).lower()
+            user_preferences[key] = boolean
+        return user_preferences
+    except PreferenceModel.DoesNotExist:
+        return {}

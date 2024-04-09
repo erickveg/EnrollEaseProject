@@ -141,7 +141,7 @@ from .definitions import Course, Schedule
 
     
 
-def generate_course_list(available_sections, selected_courses): 
+def generate_course_list(available_sections, selected_courses, user_preferences): 
     selected_courses = [course.upper().replace(" ", "") for course in selected_courses]
 
     filtered_available_sections = []
@@ -153,9 +153,9 @@ def generate_course_list(available_sections, selected_courses):
     sections_combinations = generate_sections_combinations(filtered_available_sections)    
     viable_combinations = select_viable_combinations(sections_combinations, selected_courses)
     schedules = generate_schedule_objects(viable_combinations)
-    schedules = add_gap_time(schedules)
+    schedules = add_gap_walk_time(schedules)
 
-    return get_top_10_schedules(schedules), "579376121"
+    return sort_by_preferences(schedules, user_preferences), "579376121"
 
 def generate_schedule_objects(viable_combinations):
     schedules = []
@@ -234,7 +234,7 @@ def select_viable_combinations(master_combinations, desired_classes):
        
     return viable_combinations
 
-def add_gap_time(schedules):
+def add_gap_walk_time(schedules):
     # Function to calculate time difference between two times
     from datetime import datetime
 
@@ -346,38 +346,45 @@ def walking_time(distance_meters, average_speed_kph):
     time_minutes = time_hours * 60
     
     return round(time_minutes, 1)
-                    
-def get_top_10_schedules(schedules):
-    # Sort the list of Schedule objects based on gap_time in ascending order
-    # sorted_schedules = sorted(schedules, key=lambda x: x.gap_time)
 
-    # Sort the sorted_schedules based on the length of sections in descending order
-    # sorted_schedules = sorted(sorted_schedules, key=lambda x: len(x.sections), reverse=True)
-    # TODO: Prioritize non-online classes.
+def _day_class_priority_key(schedule):
+    # Non-online courses have higher priority, so they are sorted first
+    day_class_type_courses = [course for course in schedule.sections if course.class_type == "DAY"]
+    num_day_class_type_courses = len(day_class_type_courses)
+
+    # Return a tuple containing the gap time and the number of non-online courses
+    return -num_day_class_type_courses
+
+                    
+def sort_by_preferences(schedules, user_preferences):
+    # user_preferences = {'reduceGapTime': True, 'reduceOnlineClasses': True, 'reduceNumberOfDays': True, 'reduceWalkTime': True}
+   
+    reduce_gap_time = user_preferences['reduceGapTime']
+    reduce_online_classes = user_preferences['reduceOnlineClasses']
+    reduce_number_of_days = user_preferences['reduceNumberOfDays']
+    reduce_walk_time = user_preferences['reduceWalkTime']    
+
+    # Sort the list of Schedule objects based on gap_time in ascending order
+    if reduce_gap_time:
+        schedules = sorted(schedules, key=lambda x: x.gap_time)
 
     # Sort the sorted_schedules based on the length of unique days in sections in ascending order
-    sorted_schedules = sorted(schedules, key=lambda x: len(set(day for course in x.sections for day in course.days)))
-
-    # Define a custom sorting key function
-    # Define a custom sorting key function
-    def custom_sort_key(schedule):
-        # Non-online courses have higher priority, so they are sorted first
-        # non_online_courses = [course for course in schedule.sections if "Online" not in course.room]
-        # num_non_online_courses = len(non_online_courses)
-        day_class_type_courses = [course for course in schedule.sections if course.class_type == "DAY"]
-        num_day_class_type_courses = len(day_class_type_courses)
-
-        # Return a tuple containing the gap time and the number of non-online courses
-        return (-num_day_class_type_courses, schedule.gap_time )
+    if reduce_number_of_days:
+        schedules = sorted(schedules, key=lambda x: len(set(day for course in x.sections for day in course.days)))
 
     # Sort the sorted_schedules using the custom sorting key function
-    sorted_schedules = sorted(sorted_schedules, key=custom_sort_key)
+    if reduce_online_classes:
+        schedules = sorted(schedules, key=_day_class_priority_key)
 
-    # Return the top 10 schedules, if there are more than 10 schedules available return the top 10 and 10 random schedules
-    if len(sorted_schedules) <= 20:
-        return sorted_schedules[:20]
-    else:
-        return sorted_schedules[:10] + random.sample(sorted_schedules[10:], 10)
+    # Sort the sorted_schedules based on walk_time in ascending order
+    if reduce_walk_time:
+        schedules = sorted(schedules, key=lambda x: x.walk_time)
+
+    # if len(schedules) <= 20:
+    #     return schedules[:20]
+    # else:
+    #     return schedules[:10] + random.sample(schedules[10:], 10)
+    return schedules[:20]
 
 def _get_standard_time(time_str : str):
     times = time_str.split("-")
@@ -483,13 +490,6 @@ def grab_sections_with_selenium(selected_classes):
 
         return schedules_list
 
-
-    # chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless")
-    # chrome_options.add_argument("--no-sandbox")
-    # chrome_options.add_argument("--disable-dev-shm-usage")
-
-    # Start the WebDriver and load the page
     driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 240) # 4 minutes
     driver.maximize_window()

@@ -25,6 +25,10 @@ class ScheduleModel(models.Model):
     walk_time = models.IntegerField(default=0)
     gap_time = models.IntegerField(default=0)
 
+class PreferenceModel(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    preferences = models.TextField()
+
 # class School(models.Model):
 #     name = models.CharField(max_length=255)
 
