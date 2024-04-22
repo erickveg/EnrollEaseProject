@@ -57,14 +57,14 @@ def generate_schedules(request):
 
         # available_sections = grab_sections_with_selenium(selected_courses)
         
-        # Your logic to generate schedules goes here
+            # Your logic to generate schedules goes here
             schedules, user_id = generate_course_list(available_sections, selected_courses, user_preferences)
             schedule_dicts = [schedule.to_dict() for schedule in schedules]
 
             save_user_preferences(user_id, user_preferences)
 
             return JsonResponse({'success': True, 'schedules': schedule_dicts, 'user_id': user_id})
-            # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
+        # return render(request, 'schedules/optimal_schedule.html', {'schedules': schedules})
     except Exception as e:
         print()
         print("////////////////////////////////////")

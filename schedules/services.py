@@ -137,10 +137,6 @@ from .definitions import Course, Schedule
 #         schedule.gap_time = model.gap_time
 #         return schedule
 
-
-
-    
-
 def generate_course_list(available_sections, selected_courses, user_preferences): 
     selected_courses = [course.upper().replace(" ", "") for course in selected_courses]
 
