@@ -495,6 +495,20 @@ def grab_sections_with_selenium(selected_classes):
     login_button = driver.find_element(By.ID, "jics-login-redirect-simple-button")
     login_button.click()    
 
+    username_input = driver.find_element(By.ID, "username")
+    username_input.send_keys(username)
+
+    password_input = driver.find_element(By.ID, "password")
+    password_input.send_keys(password)
+
+    submit_button = driver.find_element(By.NAME, "submit")
+    submit_button.click()
+
+    # TODO: prompt to accept duo when id="auth-view-wrapper"
+
+    dont_trust = wait.until(EC.visibility_of_element_located((By.ID, "dont-trust-browser-button")))
+    dont_trust.click()
+
     # Wait until the byui number is visible
     element = wait.until(EC.visibility_of_element_located((By.ID, "siteNavBar_welcomeBackBarLoggedIn_byuiINumber")))
 
